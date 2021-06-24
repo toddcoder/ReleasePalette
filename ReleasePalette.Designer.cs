@@ -31,14 +31,15 @@ namespace ReleasePalette
       {
          this.tableMain = new System.Windows.Forms.TableLayoutPanel();
          this.panelItems = new System.Windows.Forms.Panel();
-         this.panelControls = new System.Windows.Forms.Panel();
          this.listViewItems = new System.Windows.Forms.ListView();
          this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.labelName = new System.Windows.Forms.Label();
-         this.textValue = new System.Windows.Forms.TextBox();
-         this.buttonPasteFromClipboard = new System.Windows.Forms.Button();
+         this.panelControls = new System.Windows.Forms.Panel();
          this.buttonPasteToClipboard = new System.Windows.Forms.Button();
+         this.buttonPasteFromClipboard = new System.Windows.Forms.Button();
+         this.textValue = new System.Windows.Forms.TextBox();
+         this.labelName = new System.Windows.Forms.Label();
+         this.labelMessage = new System.Windows.Forms.Label();
          this.tableMain.SuspendLayout();
          this.panelItems.SuspendLayout();
          this.panelControls.SuspendLayout();
@@ -68,18 +69,6 @@ namespace ReleasePalette
          this.panelItems.Size = new System.Drawing.Size(794, 264);
          this.panelItems.TabIndex = 0;
          // 
-         // panelControls
-         // 
-         this.panelControls.Controls.Add(this.buttonPasteToClipboard);
-         this.panelControls.Controls.Add(this.buttonPasteFromClipboard);
-         this.panelControls.Controls.Add(this.textValue);
-         this.panelControls.Controls.Add(this.labelName);
-         this.panelControls.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.panelControls.Location = new System.Drawing.Point(3, 273);
-         this.panelControls.Name = "panelControls";
-         this.panelControls.Size = new System.Drawing.Size(794, 174);
-         this.panelControls.TabIndex = 1;
-         // 
          // listViewItems
          // 
          this.listViewItems.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -102,17 +91,38 @@ namespace ReleasePalette
          // 
          this.columnValue.Text = "Value";
          // 
-         // labelName
+         // panelControls
          // 
-         this.labelName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.labelName.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.labelName.Location = new System.Drawing.Point(9, 0);
-         this.labelName.Name = "labelName";
-         this.labelName.Size = new System.Drawing.Size(776, 23);
-         this.labelName.TabIndex = 0;
-         this.labelName.Text = "<name>";
-         this.labelName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+         this.panelControls.Controls.Add(this.labelMessage);
+         this.panelControls.Controls.Add(this.buttonPasteToClipboard);
+         this.panelControls.Controls.Add(this.buttonPasteFromClipboard);
+         this.panelControls.Controls.Add(this.textValue);
+         this.panelControls.Controls.Add(this.labelName);
+         this.panelControls.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.panelControls.Location = new System.Drawing.Point(3, 273);
+         this.panelControls.Name = "panelControls";
+         this.panelControls.Size = new System.Drawing.Size(794, 174);
+         this.panelControls.TabIndex = 1;
+         // 
+         // buttonPasteToClipboard
+         // 
+         this.buttonPasteToClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonPasteToClipboard.Location = new System.Drawing.Point(144, 142);
+         this.buttonPasteToClipboard.Name = "buttonPasteToClipboard";
+         this.buttonPasteToClipboard.Size = new System.Drawing.Size(129, 23);
+         this.buttonPasteToClipboard.TabIndex = 3;
+         this.buttonPasteToClipboard.Text = "Paste To Clipboard";
+         this.buttonPasteToClipboard.UseVisualStyleBackColor = true;
+         // 
+         // buttonPasteFromClipboard
+         // 
+         this.buttonPasteFromClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonPasteFromClipboard.Location = new System.Drawing.Point(9, 142);
+         this.buttonPasteFromClipboard.Name = "buttonPasteFromClipboard";
+         this.buttonPasteFromClipboard.Size = new System.Drawing.Size(129, 23);
+         this.buttonPasteFromClipboard.TabIndex = 2;
+         this.buttonPasteFromClipboard.Text = "Paste From Clipboard";
+         this.buttonPasteFromClipboard.UseVisualStyleBackColor = true;
          // 
          // textValue
          // 
@@ -126,25 +136,29 @@ namespace ReleasePalette
          this.textValue.Text = "<value>";
          this.textValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
          // 
-         // buttonPasteFromClipboard
+         // labelName
          // 
-         this.buttonPasteFromClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonPasteFromClipboard.Location = new System.Drawing.Point(9, 142);
-         this.buttonPasteFromClipboard.Name = "buttonPasteFromClipboard";
-         this.buttonPasteFromClipboard.Size = new System.Drawing.Size(129, 23);
-         this.buttonPasteFromClipboard.TabIndex = 2;
-         this.buttonPasteFromClipboard.Text = "Paste From Clipboard";
-         this.buttonPasteFromClipboard.UseVisualStyleBackColor = true;
+         this.labelName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelName.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelName.Location = new System.Drawing.Point(9, 0);
+         this.labelName.Name = "labelName";
+         this.labelName.Size = new System.Drawing.Size(776, 23);
+         this.labelName.TabIndex = 0;
+         this.labelName.Text = "<name>";
+         this.labelName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
-         // buttonPasteToClipboard
+         // labelMessage
          // 
-         this.buttonPasteToClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonPasteToClipboard.Location = new System.Drawing.Point(144, 142);
-         this.buttonPasteToClipboard.Name = "buttonPasteToClipboard";
-         this.buttonPasteToClipboard.Size = new System.Drawing.Size(129, 23);
-         this.buttonPasteToClipboard.TabIndex = 3;
-         this.buttonPasteToClipboard.Text = "Paste To Clipboard";
-         this.buttonPasteToClipboard.UseVisualStyleBackColor = true;
+         this.labelMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelMessage.Location = new System.Drawing.Point(279, 142);
+         this.labelMessage.Name = "labelMessage";
+         this.labelMessage.Size = new System.Drawing.Size(506, 23);
+         this.labelMessage.TabIndex = 4;
+         this.labelMessage.Text = "Ready";
+         this.labelMessage.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // ReleasePalette
          // 
@@ -175,6 +189,7 @@ namespace ReleasePalette
       private System.Windows.Forms.TextBox textValue;
       private System.Windows.Forms.Button buttonPasteToClipboard;
       private System.Windows.Forms.Button buttonPasteFromClipboard;
+      private System.Windows.Forms.Label labelMessage;
    }
 }
 

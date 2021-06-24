@@ -7,6 +7,8 @@ namespace ReleasePalette
 {
    public class ReleasePaletteConfiguration
    {
+      protected const string PATTERN_VALID_RELEASE = @"^r-\d{2}\.\d{1,2}$";
+
       protected static FileName configurationFile;
 
       static ReleasePaletteConfiguration()
@@ -28,7 +30,9 @@ namespace ReleasePalette
          {
             var configuration = new ReleasePaletteConfiguration
             {
-               Release = "r-64.0", ReleaseFolder = @"\\pdfsevolv01corp\data\ProductionSupport\ReleasePalette"
+               Release = "r-64.0",
+               ReleaseFolder = @"\\pdfsevolv01corp\data\ProductionSupport\ReleasePalette",
+               ReleaseValidPattern = PATTERN_VALID_RELEASE
             };
 
             return configuration.Save().Map(_ => configuration);
@@ -38,6 +42,8 @@ namespace ReleasePalette
       public string Release { get; set; }
 
       public FolderName ReleaseFolder { get; set; }
+
+      public string ReleaseValidPattern { get; set; }
 
       public Result<Unit> Save()
       {

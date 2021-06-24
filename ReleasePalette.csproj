@@ -55,6 +55,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Release.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Release.Designer.cs">
+      <DependentUpon>Release.cs</DependentUpon>
+    </Compile>
     <Compile Include="ReleasePalette.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -73,6 +79,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Release.resx">
+      <DependentUpon>Release.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ReleasePalette.resx">
       <DependentUpon>ReleasePalette.cs</DependentUpon>
     </EmbeddedResource>
