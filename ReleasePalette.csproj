@@ -55,6 +55,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Item.cs" />
+    <Compile Include="ItemType.cs" />
     <Compile Include="Release.cs">
       <SubType>Form</SubType>
     </Compile>
