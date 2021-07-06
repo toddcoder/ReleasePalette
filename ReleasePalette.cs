@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Core.Collections;
 using Core.Configurations;
@@ -8,6 +9,7 @@ using Core.Monads;
 using Core.Strings;
 using Core.WinForms;
 using Core.WinForms.Documents;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
@@ -207,7 +209,7 @@ namespace ReleasePalette
                {
                   foreach (var (key, value) in dataConfiguration.Values())
                   {
-                     if (keyToIndexes.If(key, out index))
+                     if (listViewItems.Items.Count > index && keyToIndexes.If(key, out index))
                      {
                         listViewItems.Items[index].SubItems[1].Text = value;
                      }
@@ -229,9 +231,8 @@ namespace ReleasePalette
          {
             listViewItems.BeginUpdate();
             listViewItems.Items.Clear();
-            foreach (var (_, item) in items)
+            foreach (var listViewItem in items.Values.Select(item => new ListViewItem(item.Label)))
             {
-               var listViewItem = new ListViewItem(item.Label);
                listViewItem.SubItems.Add(string.Empty);
                listViewItems.Items.Add(listViewItem);
             }
@@ -249,7 +250,9 @@ namespace ReleasePalette
          }
       }
 
-      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e)
+      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e) => selectedIndexAction(none<string>());
+
+      protected void selectedIndexAction(Maybe<string> _value)
       {
          try
          {
@@ -258,8 +261,18 @@ namespace ReleasePalette
                var listViewItem = listViewItems.SelectedItems[0];
                var key = listViewItem.Text;
                labelName.Text = key;
-               var value = listViewItem.SubItems[1].Text;
+
+               if (_value.If(out var value))
+               {
+                  listViewItem.SubItems[1].Text = value;
+               }
+               else
+               {
+                  value = listViewItem.SubItems[1].Text;
+               }
+
                textValue.Text = value;
+               copyToClipboard();
 
                if (itemTypes.If(key, out var itemType) && itemType == ItemType.Url && value.IsNotEmpty())
                {
@@ -305,7 +318,8 @@ namespace ReleasePalette
       {
          if (e.Data.GetDataPresent(typeof(string)))
          {
-            textValue.Text = (string)e.Data.GetData(typeof(string));
+            var value = (string)e.Data.GetData(typeof(string));
+            selectedIndexAction(value.Some());
          }
       }
 
@@ -320,6 +334,10 @@ namespace ReleasePalette
          showSuccess($"Navigated to {url.Truncate(40)}");
       }
 
-      protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e) => saveData();
+      protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         saveData();
+         configuration.Save();
+      }
    }
 }

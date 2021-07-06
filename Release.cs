@@ -21,8 +21,9 @@ namespace ReleasePalette
 
       protected void Release_Load(object sender, EventArgs e)
       {
-         if (ReleaseValue.IsNotEmpty())
+         if (ReleaseValue.IsNotEmpty() && isValid(ReleaseValue))
          {
+            textRelease.Text = ReleaseValue;
          }
       }
 
@@ -50,6 +51,14 @@ namespace ReleasePalette
          labelState.BackColor = Color.Red;
          labelState.Text = "Invalid";
          buttonOk.Enabled = false;
+      }
+
+      protected void Release_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         if (isValid(textRelease.Text))
+         {
+            ReleaseValue = textRelease.Text;
+         }
       }
    }
 }

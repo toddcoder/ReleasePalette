@@ -106,6 +106,7 @@ namespace ReleasePalette
          this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
          this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
          this.Text = "Release";
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Release_FormClosing);
          this.Load += new System.EventHandler(this.Release_Load);
          this.ResumeLayout(false);
          this.PerformLayout();
