@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using Core.Collections;
 using Core.Configurations;
@@ -17,7 +17,6 @@ namespace ReleasePalette
    {
       protected ReleasePaletteConfiguration configuration;
       protected FreeMenus menus;
-      protected StringHash<Item> items;
       protected StringHash<ItemType> itemTypes;
       protected StringHash<int> keyToIndexes;
       protected StringHash labelToKeys;
@@ -39,12 +38,14 @@ namespace ReleasePalette
          menus.Menu("Commands");
          menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
          menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
+         menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
+         menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
          menus.Menu("Releases");
          menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
          menus.RenderMainMenu();
 
-         loadItems().OnSuccess(_ => loadListView()).OnFailure(exception => showException(exception));
+         loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(exception => showException(exception));
       }
 
       protected void pasteFromClipboard()
@@ -77,10 +78,6 @@ namespace ReleasePalette
          {
             Clipboard.SetText(text);
             showSuccess($"Copied text from {labelName.Text} to clipboard");
-         }
-         else
-         {
-            showFailure("Clipboard has no text");
          }
       }
 
@@ -172,81 +169,71 @@ namespace ReleasePalette
 
       protected Result<Unit> loadItems()
       {
-         var _configuration =
-            from source in configuration.MapFile.TryTo.Text
-            from configurationFromString in Configuration.FromString(source)
-            select configurationFromString;
-         if (_configuration.ValueOrCast(out var mapConfiguration, out Result<Unit> asUnit))
-         {
-            items = new StringHash<Item>(true);
-            itemTypes = new StringHash<ItemType>(true);
-            keyToIndexes = new StringHash<int>(true);
-            var index = 0;
-            labelToKeys = new StringHash(true);
-            foreach (var (key, group) in mapConfiguration.Groups())
-            {
-               var _result =
-                  from groupLabel in @group.GetValue("label")
-                  from type in @group.GetValue("type")
-                  from groupType in type.AsEnumeration<ItemType>()
-                  select (groupLabel, groupType);
-               if (_result.If(out var label, out var itemType))
-               {
-                  items[key] = new Item(label, itemType);
-                  itemTypes[label] = itemType;
-                  keyToIndexes[key] = index++;
-                  labelToKeys[label] = key;
-               }
-            }
-
-            if (configuration.DataFile.Exists())
-            {
-               var _data =
-                  from source in configuration.DataFile.TryTo.Text
-                  from configurationFromString in Configuration.FromString(source)
-                  select configurationFromString;
-               if (_data.ValueOrCast(out var dataConfiguration, out asUnit))
-               {
-                  foreach (var (key, value) in dataConfiguration.Values())
-                  {
-                     if (listViewItems.Items.Count > index && keyToIndexes.If(key, out index))
-                     {
-                        listViewItems.Items[index].SubItems[1].Text = value;
-                     }
-                  }
-               }
-            }
-
-            return Unit.Success();
-         }
-         else
-         {
-            return asUnit;
-         }
-      }
-
-      protected void loadListView()
-      {
          try
          {
             listViewItems.BeginUpdate();
             listViewItems.Items.Clear();
-            foreach (var listViewItem in items.Values.Select(item => new ListViewItem(item.Label)))
-            {
-               listViewItem.SubItems.Add(string.Empty);
-               listViewItems.Items.Add(listViewItem);
-            }
 
-            if (items.Count > 0)
+            var _configuration =
+               from source in configuration.MapFile.TryTo.Text
+               from configurationFromString in Configuration.FromString(source)
+               select configurationFromString;
+            if (_configuration.ValueOrCast(out var mapConfiguration, out Result<Unit> asUnit))
             {
+               itemTypes = new StringHash<ItemType>(true);
+               keyToIndexes = new StringHash<int>(true);
+               var index = 0;
+               labelToKeys = new StringHash(true);
+               foreach (var (key, group) in mapConfiguration.Groups())
+               {
+                  var _result =
+                     from groupLabel in @group.GetValue("label")
+                     from type in @group.GetValue("type")
+                     from groupType in type.AsEnumeration<ItemType>()
+                     select (groupLabel, groupType);
+                  if (_result.If(out var label, out var itemType))
+                  {
+                     itemTypes[label] = itemType;
+                     keyToIndexes[key] = index++;
+                     labelToKeys[label] = key;
+                     listViewItems.Items.Add(label);
+                  }
+               }
+
+               if (configuration.DataFile.Exists())
+               {
+                  var _data =
+                     from source in configuration.DataFile.TryTo.Text
+                     from configurationFromString in Configuration.FromString(source)
+                     select configurationFromString;
+                  if (_data.ValueOrCast(out var dataConfiguration, out asUnit))
+                  {
+                     foreach (var (key, value) in dataConfiguration.Values())
+                     {
+                        if (keyToIndexes.If(key, out index))
+                        {
+                           listViewItems.Items[index].SubItems.Add(value);
+                        }
+                     }
+                  }
+               }
+
                listViewItems.Items[0].Selected = true;
-               listViewItems.Select();
+
+               return Unit.Success();
             }
+            else
+            {
+               return asUnit;
+            }
+         }
+         catch (Exception exception)
+         {
+            return failure<Unit>(exception);
          }
          finally
          {
             listViewItems.EndUpdate();
-            listViewItems.AutoSizeColumns();
          }
       }
 
@@ -339,5 +326,31 @@ namespace ReleasePalette
          saveData();
          configuration.Save();
       }
+
+      protected void open()
+      {
+         if (listViewItems.SelectedItems.Count > 0)
+         {
+            var label = listViewItems.SelectedItems[0].SubItems[0].Text;
+            var possibleUrl = listViewItems.SelectedItems[0].SubItems[1].Text;
+            if (itemTypes.If(label, out var type))
+            {
+               if (type == ItemType.Url)
+               {
+                  Process.Start(possibleUrl);
+               }
+               else
+               {
+                  showFailure($"Item {label} isn't a URL");
+               }
+            }
+            else
+            {
+               showFailure($"Couldn't find label {label}");
+            }
+         }
+      }
+
+      protected void buttonOpen_Click(object sender, EventArgs e) => open();
    }
 }

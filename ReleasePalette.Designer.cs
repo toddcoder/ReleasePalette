@@ -43,6 +43,7 @@ namespace ReleasePalette
          this.labelName = new System.Windows.Forms.Label();
          this.panelBrowser = new System.Windows.Forms.Panel();
          this.webBrowser = new System.Windows.Forms.WebBrowser();
+         this.buttonOpen = new System.Windows.Forms.Button();
          this.tableMain.SuspendLayout();
          this.panelItems.SuspendLayout();
          this.panelControls.SuspendLayout();
@@ -103,6 +104,7 @@ namespace ReleasePalette
          // 
          // panelControls
          // 
+         this.panelControls.Controls.Add(this.buttonOpen);
          this.panelControls.Controls.Add(this.buttonApply);
          this.panelControls.Controls.Add(this.labelMessage);
          this.panelControls.Controls.Add(this.buttonCopyToClipboard);
@@ -207,6 +209,17 @@ namespace ReleasePalette
          this.webBrowser.TabIndex = 0;
          this.webBrowser.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.webBrowser_DocumentCompleted);
          // 
+         // buttonOpen
+         // 
+         this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonOpen.Location = new System.Drawing.Point(414, 76);
+         this.buttonOpen.Name = "buttonOpen";
+         this.buttonOpen.Size = new System.Drawing.Size(129, 23);
+         this.buttonOpen.TabIndex = 6;
+         this.buttonOpen.Text = "Open";
+         this.buttonOpen.UseVisualStyleBackColor = true;
+         this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
+         // 
          // ReleasePalette
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -242,6 +255,7 @@ namespace ReleasePalette
       private System.Windows.Forms.Panel panelBrowser;
       private System.Windows.Forms.WebBrowser webBrowser;
       private System.Windows.Forms.Button buttonApply;
+      private System.Windows.Forms.Button buttonOpen;
    }
 }
 
