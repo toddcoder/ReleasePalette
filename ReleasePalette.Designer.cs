@@ -35,6 +35,7 @@ namespace ReleasePalette
          this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.panelControls = new System.Windows.Forms.Panel();
+         this.buttonOpen = new System.Windows.Forms.Button();
          this.buttonApply = new System.Windows.Forms.Button();
          this.labelMessage = new System.Windows.Forms.Label();
          this.buttonCopyToClipboard = new System.Windows.Forms.Button();
@@ -43,7 +44,6 @@ namespace ReleasePalette
          this.labelName = new System.Windows.Forms.Label();
          this.panelBrowser = new System.Windows.Forms.Panel();
          this.webBrowser = new System.Windows.Forms.WebBrowser();
-         this.buttonOpen = new System.Windows.Forms.Button();
          this.tableMain.SuspendLayout();
          this.panelItems.SuspendLayout();
          this.panelControls.SuspendLayout();
@@ -87,6 +87,7 @@ namespace ReleasePalette
          this.listViewItems.GridLines = true;
          this.listViewItems.HideSelection = false;
          this.listViewItems.Location = new System.Drawing.Point(0, 0);
+         this.listViewItems.MultiSelect = false;
          this.listViewItems.Name = "listViewItems";
          this.listViewItems.Size = new System.Drawing.Size(558, 289);
          this.listViewItems.TabIndex = 1;
@@ -116,6 +117,17 @@ namespace ReleasePalette
          this.panelControls.Name = "panelControls";
          this.panelControls.Size = new System.Drawing.Size(558, 192);
          this.panelControls.TabIndex = 1;
+         // 
+         // buttonOpen
+         // 
+         this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonOpen.Location = new System.Drawing.Point(414, 76);
+         this.buttonOpen.Name = "buttonOpen";
+         this.buttonOpen.Size = new System.Drawing.Size(129, 23);
+         this.buttonOpen.TabIndex = 6;
+         this.buttonOpen.Text = "Open";
+         this.buttonOpen.UseVisualStyleBackColor = true;
+         this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
          // 
          // buttonApply
          // 
@@ -208,17 +220,6 @@ namespace ReleasePalette
          this.webBrowser.Size = new System.Drawing.Size(558, 487);
          this.webBrowser.TabIndex = 0;
          this.webBrowser.DocumentCompleted += new System.Windows.Forms.WebBrowserDocumentCompletedEventHandler(this.webBrowser_DocumentCompleted);
-         // 
-         // buttonOpen
-         // 
-         this.buttonOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonOpen.Location = new System.Drawing.Point(414, 76);
-         this.buttonOpen.Name = "buttonOpen";
-         this.buttonOpen.Size = new System.Drawing.Size(129, 23);
-         this.buttonOpen.TabIndex = 6;
-         this.buttonOpen.Text = "Open";
-         this.buttonOpen.UseVisualStyleBackColor = true;
-         this.buttonOpen.Click += new System.EventHandler(this.buttonOpen_Click);
          // 
          // ReleasePalette
          // 

@@ -41,6 +41,9 @@ namespace ReleasePalette
          menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
          menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
+         menus.Menu("Tools");
+         menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
+
          menus.Menu("Releases");
          menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
          menus.RenderMainMenu();
@@ -271,7 +274,6 @@ namespace ReleasePalette
          catch (Exception exception)
          {
             Console.WriteLine(exception);
-            throw;
          }
       }
 
@@ -352,5 +354,11 @@ namespace ReleasePalette
       }
 
       protected void buttonOpen_Click(object sender, EventArgs e) => open();
+
+      protected void showCompareDialog()
+      {
+         using var compare = new Compare();
+         compare.ShowDialog();
+      }
    }
 }
