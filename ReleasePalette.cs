@@ -49,6 +49,9 @@ namespace ReleasePalette
 
          menus.Menu("Releases");
          menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
+
+         menus.Menu("Emails");
+         menus.Menu("Emails", "Test", (_, _) => testEmail());
          menus.RenderMainMenu();
 
          loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(exception => showException(exception));
@@ -418,6 +421,12 @@ namespace ReleasePalette
                textValue.Select(text.Length, textValue.Text.Length - text.Length);
             }
          }
+      }
+
+      protected void testEmail()
+      {
+         var emailer = new Emailer { To = "Todd Bennett", Subject = "Test", Body = "Test" };
+         emailer.Open().OnFailure(e => showException(e));
       }
    }
 }
