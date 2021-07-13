@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Core.Applications;
 using Core.Collections;
 using Core.Configurations;
 using Core.Matching;
@@ -18,6 +19,7 @@ namespace ReleasePalette
    public partial class ReleasePalette : Form
    {
       protected ReleasePaletteConfiguration configuration;
+      protected Configuration mapConfiguration;
       protected FreeMenus menus;
       protected StringHash<ItemType> itemTypes;
       protected StringHash<int> keyToIndexes;
@@ -33,8 +35,15 @@ namespace ReleasePalette
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
          ReleasePaletteConfiguration.Load()
-            .OnSuccess(newConfiguration => setConfiguration(newConfiguration).showSuccess("Configuration loaded").showTitle())
-            .OnFailure(exception => showException(exception));
+            .OnSuccess(newConfiguration => setConfiguration(newConfiguration).showTitle())
+            .OnFailure(loadException => showException(loadException));
+         var _mapConfiguration =
+            from source in configuration.MapFile.TryTo.Text
+            from configurationFromString in Configuration.FromString(source)
+            select configurationFromString;
+         _mapConfiguration
+            .OnSuccess(newConfiguration => setMapConfiguration(newConfiguration).showSuccess("Configurations loaded"))
+            .OnFailure(mapException => showException(mapException));
 
          menus = new FreeMenus { Form = this.Some<Form>() };
 
@@ -107,8 +116,9 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               configuration.DataFile.Text = dataConfiguration.ToString();
-               configuration.DataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
+               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               dataFile.Text = dataConfiguration.ToString();
+               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
                   .OnFailure(e => showException(e));
                showSuccess("Data saved");
@@ -167,14 +177,30 @@ namespace ReleasePalette
          return this;
       }
 
+      protected ReleasePalette setMapConfiguration(Configuration newConfiguration)
+      {
+         mapConfiguration = newConfiguration;
+         return this;
+      }
+
       protected void setRelease()
       {
          using var releaseDialog = new Release { ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
+
+            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            if (!dataFile.Exists())
+            {
+               saveData();
+            }
             configuration.Save()
-               .OnSuccess(_ => showSuccess("Configuration saved").showTitle())
+               .OnSuccess(_ =>
+               {
+                  loadItems();
+                  showTitle();
+               })
                .OnFailure(exception => showException(exception));
          }
       }
@@ -186,69 +212,63 @@ namespace ReleasePalette
             listViewItems.BeginUpdate();
             listViewItems.Items.Clear();
 
-            var _configuration =
-               from source in configuration.MapFile.TryTo.Text
-               from configurationFromString in Configuration.FromString(source)
-               select configurationFromString;
-            if (_configuration.ValueOrCast(out var mapConfiguration, out Result<Unit> asUnit))
+            itemTypes = new StringHash<ItemType>(true);
+            keyToIndexes = new StringHash<int>(true);
+            var index = 0;
+            labelToKeys = new StringHash(true);
+            keyToList = new StringHash<StringSet>(true);
+            foreach (var (key, group) in mapConfiguration.Groups())
             {
-               itemTypes = new StringHash<ItemType>(true);
-               keyToIndexes = new StringHash<int>(true);
-               var index = 0;
-               labelToKeys = new StringHash(true);
-               keyToList = new StringHash<StringSet>(true);
-               foreach (var (key, group) in mapConfiguration.Groups())
+               var _result =
+                  from groupLabel in @group.GetValue("label")
+                  from type in @group.GetValue("type")
+                  from groupType in type.AsEnumeration<ItemType>()
+                  select (groupLabel, groupType);
+               if (_result.If(out var label, out var itemType))
                {
-                  var _result =
-                     from groupLabel in @group.GetValue("label")
-                     from type in @group.GetValue("type")
-                     from groupType in type.AsEnumeration<ItemType>()
-                     select (groupLabel, groupType);
-                  if (_result.If(out var label, out var itemType))
+                  itemTypes[label] = itemType;
+                  keyToIndexes[key] = index++;
+                  labelToKeys[label] = key;
+                  listViewItems.Items.Add(label);
+                  if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
                   {
-                     itemTypes[label] = itemType;
-                     keyToIndexes[key] = index++;
-                     labelToKeys[label] = key;
-                     listViewItems.Items.Add(label);
-                     if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
+                     var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
+                     if (valuesList.Length <= 1)
                      {
-                        var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
-                        if (valuesList.Length <= 1)
-                        {
-                           return "List types must have at least two items".Failure<Unit>();
-                        }
+                        return "List types must have at least two items".Failure<Unit>();
+                     }
 
-                        keyToList[key] = new StringSet(true, valuesList);
+                     keyToList[key] = new StringSet(true, valuesList);
+                  }
+               }
+            }
+
+            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            if (dataFile.Exists())
+            {
+               var _data =
+                  from source in dataFile.TryTo.Text
+                  from configurationFromString in Configuration.FromString(source)
+                  select configurationFromString;
+               if (_data.ValueOrCast(out var dataConfiguration, out Result<Unit> asUnit))
+               {
+                  foreach (var (key, value) in dataConfiguration.Values())
+                  {
+                     if (keyToIndexes.If(key, out index))
+                     {
+                        listViewItems.Items[index].SubItems.Add(value);
                      }
                   }
                }
-
-               if (configuration.DataFile.Exists())
+               else
                {
-                  var _data =
-                     from source in configuration.DataFile.TryTo.Text
-                     from configurationFromString in Configuration.FromString(source)
-                     select configurationFromString;
-                  if (_data.ValueOrCast(out var dataConfiguration, out asUnit))
-                  {
-                     foreach (var (key, value) in dataConfiguration.Values())
-                     {
-                        if (keyToIndexes.If(key, out index))
-                        {
-                           listViewItems.Items[index].SubItems.Add(value);
-                        }
-                     }
-                  }
+                  return asUnit;
                }
-
-               listViewItems.Items[0].Selected = true;
-
-               return Unit.Success();
             }
-            else
-            {
-               return asUnit;
-            }
+
+            listViewItems.Items[0].Selected = true;
+
+            return Unit.Success();
          }
          catch (Exception exception)
          {
@@ -420,6 +440,39 @@ namespace ReleasePalette
                textValue.Text = fullValue;
                textValue.Select(text.Length, textValue.Text.Length - text.Length);
             }
+         }
+      }
+
+      protected StringHash getReplacements()
+      {
+         var replacements = new StringHash(true);
+
+         foreach (var (key, index) in keyToIndexes)
+         {
+            var item = listViewItems.Items[index];
+            replacements[key] = item.SubItems[1].Text;
+         }
+
+         return replacements;
+      }
+
+      protected void openEmail(string fileName) => openEmailFrom(fileName).OnFailure(e => showException(e));
+
+      protected Result<Unit> openEmailFrom(string fileName)
+      {
+         try
+         {
+            var replacements = getReplacements();
+
+            var resources = new Resources<ReleasePalette>();
+            var source = resources.String(fileName);
+            var generator = new EmailGenerator(source);
+
+            return generator.Generate(replacements, Array.Empty<string>());
+         }
+         catch (Exception exception)
+         {
+            return failure<Unit>(exception);
          }
       }
 
