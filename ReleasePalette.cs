@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using Core.Collections;
 using Core.Configurations;
@@ -20,6 +22,7 @@ namespace ReleasePalette
       protected StringHash<ItemType> itemTypes;
       protected StringHash<int> keyToIndexes;
       protected StringHash labelToKeys;
+      protected StringHash<StringSet> keyToList;
 
       public ReleasePalette()
       {
@@ -102,6 +105,9 @@ namespace ReleasePalette
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
                configuration.DataFile.Text = dataConfiguration.ToString();
+               configuration.DataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
+                  .OnSuccess(_ => showSuccess("Data saved"))
+                  .OnFailure(e => showException(e));
                showSuccess("Data saved");
             }
             else
@@ -187,6 +193,7 @@ namespace ReleasePalette
                keyToIndexes = new StringHash<int>(true);
                var index = 0;
                labelToKeys = new StringHash(true);
+               keyToList = new StringHash<StringSet>(true);
                foreach (var (key, group) in mapConfiguration.Groups())
                {
                   var _result =
@@ -200,6 +207,16 @@ namespace ReleasePalette
                      keyToIndexes[key] = index++;
                      labelToKeys[label] = key;
                      listViewItems.Items.Add(label);
+                     if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
+                     {
+                        var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
+                        if (valuesList.Length <= 1)
+                        {
+                           return "List types must have at least two items".Failure<Unit>();
+                        }
+
+                        keyToList[key] = new StringSet(true, valuesList);
+                     }
                   }
                }
 
@@ -264,10 +281,17 @@ namespace ReleasePalette
                textValue.Text = value;
                copyToClipboard();
 
-               if (itemTypes.If(key, out var itemType) && itemType == ItemType.Url && value.IsNotEmpty())
+               if (itemTypes.If(key, out var itemType))
                {
-                  showMessage($"Opening {value.Truncate(40)}");
-                  webBrowser.Navigate(value);
+                  if (itemType == ItemType.Url && value.IsNotEmpty())
+                  {
+                     showMessage($"Opening {value.Truncate(40)}");
+                     webBrowser.Navigate(value);
+                  }
+                  else
+                  {
+                     webBrowser.Navigate("about:blank");
+                  }
                }
             }
          }
@@ -359,6 +383,41 @@ namespace ReleasePalette
       {
          using var compare = new Compare();
          compare.ShowDialog();
+      }
+
+      protected Maybe<(string label, string text)> getLineItem()
+      {
+         if (listViewItems.SelectedItems.Count > 0)
+         {
+            var item = listViewItems.SelectedItems[0];
+            return (item.SubItems[0].Text, item.SubItems[1].Text).Some();
+         }
+         else
+         {
+            return none<(string, string)>();
+         }
+      }
+
+      protected void textValue_TextChanged(object sender, EventArgs e)
+      {
+         var _result =
+            from lineItem in getLineItem()
+            from key in labelToKeys.Map(lineItem.label)
+            from itemType in itemTypes.Map(lineItem.label)
+            from stringSet in keyToList.Map(key)
+            select (stringSet, itemType);
+         if (_result.If(out var set, out var type) && type == ItemType.List)
+         {
+            var text = textValue.Text;
+            if (set.Contains(text))
+            {
+            }
+            else if (set.FirstStartsWith(text).If(out var fullValue))
+            {
+               textValue.Text = fullValue;
+               textValue.Select(text.Length, textValue.Text.Length - text.Length);
+            }
+         }
       }
    }
 }
