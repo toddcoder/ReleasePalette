@@ -32,7 +32,7 @@ namespace ReleasePalette
             {
                Release = "r-64.0",
                ReleaseFolder = @"\\pdfsevolv01corp\data\ProductionSupport\ReleasePalette",
-               ReleaseValidPattern = @"^r-\d{2}\.\d{1,2}$",
+               ReleaseValidPattern = @"^r-\d{1,2}\.\d{1,2}\.\d{1,2}$",
                MapFile = configurationFolder + "map.configuration",
                DataFile = configurationFolder + "data.configuration"
             };

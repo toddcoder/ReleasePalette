@@ -186,6 +186,7 @@ namespace ReleasePalette
          this.textValue.TabIndex = 1;
          this.textValue.Text = "<value>";
          this.textValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+         this.textValue.TextChanged += new System.EventHandler(this.textValue_TextChanged);
          this.textValue.DragDrop += new System.Windows.Forms.DragEventHandler(this.textValue_DragDrop);
          this.textValue.DragOver += new System.Windows.Forms.DragEventHandler(this.textValue_DragOver);
          // 
