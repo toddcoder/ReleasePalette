@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using Core.Computers;
 using Core.Matching;
 using Core.Strings;
 
@@ -12,6 +14,8 @@ namespace ReleasePalette
       {
          InitializeComponent();
       }
+
+      public FolderName DataFolder { get; set; }
 
       public string ReleaseValidPattern { get; set; }
 
@@ -25,6 +29,12 @@ namespace ReleasePalette
          {
             textRelease.Text = ReleaseValue;
          }
+
+         listReleases.Items.AddRange(DataFolder.Files
+            .Where(f => isValid(f.Name))
+            .OrderBy(f => f.Name)
+            .Select(f => f.Name)
+            .Cast<object>().ToArray());
       }
 
       protected void textRelease_TextChanged(object sender, EventArgs e)
@@ -58,6 +68,28 @@ namespace ReleasePalette
          if (isValid(textRelease.Text))
          {
             ReleaseValue = textRelease.Text;
+         }
+      }
+
+      protected void listReleases_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (listReleases.SelectedIndex > -1)
+         {
+            var release = (string)listReleases.SelectedItem;
+            textRelease.Text = release;
+         }
+      }
+
+      protected void listReleases_DoubleClick(object sender, EventArgs e)
+      {
+         if (listReleases.SelectedIndex > -1)
+         {
+            var release = (string)listReleases.SelectedItem;
+            if (isValid(release))
+            {
+               ReleaseValue = release;
+               Close();
+            }
          }
       }
    }

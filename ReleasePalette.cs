@@ -185,7 +185,10 @@ namespace ReleasePalette
 
       protected void setRelease()
       {
-         using var releaseDialog = new Release { ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern };
+         using var releaseDialog = new Release
+         {
+            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, DataFolder = configuration.MapFile.Folder
+         };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
@@ -195,6 +198,7 @@ namespace ReleasePalette
             {
                saveData();
             }
+
             configuration.Save()
                .OnSuccess(_ =>
                {
@@ -333,6 +337,7 @@ namespace ReleasePalette
          if (listViewItems.SelectedItems.Count > 0)
          {
             listViewItems.SelectedItems[0].SubItems[1].Text = textValue.Text;
+            saveData();
          }
       }
 
