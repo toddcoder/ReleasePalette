@@ -1,0 +1,17 @@
+﻿to: "EstreamSupport@eprod.com"
+cc: "Evolve Release Management Team"
+subject: "{release} Post Deployment Validation"
+body: "# {release} Post Deployment Validation
+## Base Tests
+- Hangfire - passed
+- Intervals - passed
+- SLE ### errors in the ## minute deploy window
+
+## Web Tests (manual)
+- Login - passed
+- Search - passed
+- Report - passed
+
+---
+
+![RabbitMQ](file://C:/Temp/rabbit-mq.jpg)"

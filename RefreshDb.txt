@@ -1,0 +1,5 @@
+﻿to: "Evolve Release Management Team"
+cc: "Sukumaran, Sunil; Price, Sean; Long, Jack; {otherTo}"
+subject: "Please refresh the DB on [{environment}] in preparation for {releaseType} {release} - deployment for testing"
+body: "Please refresh the DB on [{environment}] in preparation for {releaseType} {release}
+deployment for testing"

@@ -1,0 +1,9 @@
+﻿to: "Evolve Release Management Team"
+subject: "{releaseType} ({outageType}) {build} deployment request to EstreamPS and Staging18UA"
+body: "**Deploy request to EstreamPS**
+
+[{estreamPs}]({estreamPs})
+
+**Deploy request to Staging18UA**
+
+[{staging18Ua}]({staging18Ua})"
