@@ -1,0 +1,6 @@
+﻿to: "Burcham, Eric; Clark, Dylan; Rundell, Michael; Blakes, Edward; Price, Sean"
+cc: "Sukumaran; Long, Jack; {otherTo}"
+subject: "Please approve [{masterPrTitle}] for security gate specially"
+body: "Please approve the following PR for {releaseType} Release - {releaseDate}
+
+[{pullRequestTitle1}]({masterPr}){pullRequestTitle2}"

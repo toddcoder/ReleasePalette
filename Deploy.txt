@@ -1,0 +1,4 @@
+﻿to: "Evolve Release Management Team"
+cc: "Sukumaran; Long, Jack; Price, Sean; {otherTo}"
+subject: "{releaseType} ({outageType}) {release} deployment request to {environment} for testing"
+body: "[{environmentUrl}]({environmentUrl})"

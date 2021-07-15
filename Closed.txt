@@ -1,0 +1,5 @@
+﻿to: "EstreamSupport@eprod.com"
+subject: "{release} has been CLOSED"
+body: "[{release}] has been merged to master and is closed.
+
+Please merge master into any inflight branches."

@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Core.Applications;
 using Core.Collections;
+using Core.Computers;
 using Core.Configurations;
+using Core.Enumerables;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -18,6 +22,8 @@ namespace ReleasePalette
    public partial class ReleasePalette : Form
    {
       protected ReleasePaletteConfiguration configuration;
+      protected Configuration mapConfiguration;
+      protected Personal personal;
       protected FreeMenus menus;
       protected StringHash<ItemType> itemTypes;
       protected StringHash<int> keyToIndexes;
@@ -32,26 +38,53 @@ namespace ReleasePalette
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
-         ReleasePaletteConfiguration.Load()
-            .OnSuccess(newConfiguration => setConfiguration(newConfiguration).showSuccess("Configuration loaded").showTitle())
-            .OnFailure(exception => showException(exception));
+         var _configurations =
+            from _configuration in ReleasePaletteConfiguration.Load()
+            from mapConfigurationSource in _configuration.MapFile.TryTo.Text
+            from _mapConfiguration in Configuration.FromString(mapConfigurationSource)
+            from personalSource in (_configuration.MapFile.Folder + "personal.configuration").TryTo.Text
+            from personalConfiguration in Configuration.FromString(personalSource)
+            from _personal in personalConfiguration.Deserialize<Personal>()
+            select (_configuration, _mapConfiguration, _personal);
+         if (_configurations.If(out configuration, out mapConfiguration, out personal, out var exception))
+         {
+            showSuccess("Configurations loaded");
 
-         menus = new FreeMenus { Form = this.Some<Form>() };
+            menus = new FreeMenus { Form = this.Some<Form>() };
 
-         menus.Menu("Commands");
-         menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
-         menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
-         menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
-         menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
+            menus.Menu("Commands");
+            menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
+            menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
+            menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
+            menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
-         menus.Menu("Tools");
-         menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
+            menus.Menu("Tools");
+            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
 
-         menus.Menu("Releases");
-         menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
-         menus.RenderMainMenu();
+            menus.Menu("Releases");
+            menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
 
-         loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(exception => showException(exception));
+            menus.Menu("Emails");
+            menus.Menu("Emails", "Refresh DB", (_, _) => refreshDbEmail());
+            menus.Menu("Emails", "Migrate DB", (_, _) => migrateDbEmail());
+            menus.Menu("Emails", "Deploy Build to Environment", (_, _) => deployEnvironmentEmail());
+            menus.Menu("Emails", "Release Notes", (_, _) => releaseNotesEmail());
+            menus.Menu("Emails", "Request Security Review", (_, _) => requestSecurityReviewEmail());
+            menus.Menu("Emails", "Request PSR Run", (_, _) => requestPsrRunEmail());
+            menus.MenuSeparator("Emails");
+            menus.Menu("Emails", "Post-Deployment Validation", (_, _) => postDeploymentValidationEmail());
+            menus.Menu("Emails", "Post-Deployment Request for EstreamPS and Staging18ua", (_, _) => postDeploymentRequestEmail());
+            menus.Menu("Emails", "Release Closed", (_, _) => closedEmail());
+            menus.Menu("Emails", "Release -> Master -> Develop", (_, _) => ToDevelopEmail());
+
+            menus.RenderMainMenu();
+
+            loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(loadException => showException(loadException));
+         }
+         else
+         {
+            showException(exception);
+         }
       }
 
       protected void pasteFromClipboard()
@@ -104,8 +137,9 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               configuration.DataFile.Text = dataConfiguration.ToString();
-               configuration.DataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
+               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               dataFile.Text = dataConfiguration.ToString();
+               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
                   .OnFailure(e => showException(e));
                showSuccess("Data saved");
@@ -164,14 +198,34 @@ namespace ReleasePalette
          return this;
       }
 
+      protected ReleasePalette setMapConfiguration(Configuration newConfiguration)
+      {
+         mapConfiguration = newConfiguration;
+         return this;
+      }
+
       protected void setRelease()
       {
-         using var releaseDialog = new Release { ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern };
+         using var releaseDialog = new Release
+         {
+            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, DataFolder = configuration.MapFile.Folder
+         };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
+
+            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            if (!dataFile.Exists())
+            {
+               saveData();
+            }
+
             configuration.Save()
-               .OnSuccess(_ => showSuccess("Configuration saved").showTitle())
+               .OnSuccess(_ =>
+               {
+                  loadItems();
+                  showTitle();
+               })
                .OnFailure(exception => showException(exception));
          }
       }
@@ -183,69 +237,63 @@ namespace ReleasePalette
             listViewItems.BeginUpdate();
             listViewItems.Items.Clear();
 
-            var _configuration =
-               from source in configuration.MapFile.TryTo.Text
-               from configurationFromString in Configuration.FromString(source)
-               select configurationFromString;
-            if (_configuration.ValueOrCast(out var mapConfiguration, out Result<Unit> asUnit))
+            itemTypes = new StringHash<ItemType>(true);
+            keyToIndexes = new StringHash<int>(true);
+            var index = 0;
+            labelToKeys = new StringHash(true);
+            keyToList = new StringHash<StringSet>(true);
+            foreach (var (key, group) in mapConfiguration.Groups())
             {
-               itemTypes = new StringHash<ItemType>(true);
-               keyToIndexes = new StringHash<int>(true);
-               var index = 0;
-               labelToKeys = new StringHash(true);
-               keyToList = new StringHash<StringSet>(true);
-               foreach (var (key, group) in mapConfiguration.Groups())
+               var _result =
+                  from groupLabel in @group.GetValue("label")
+                  from type in @group.GetValue("type")
+                  from groupType in type.AsEnumeration<ItemType>()
+                  select (groupLabel, groupType);
+               if (_result.If(out var label, out var itemType))
                {
-                  var _result =
-                     from groupLabel in @group.GetValue("label")
-                     from type in @group.GetValue("type")
-                     from groupType in type.AsEnumeration<ItemType>()
-                     select (groupLabel, groupType);
-                  if (_result.If(out var label, out var itemType))
+                  itemTypes[label] = itemType;
+                  keyToIndexes[key] = index++;
+                  labelToKeys[label] = key;
+                  listViewItems.Items.Add(label);
+                  if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
                   {
-                     itemTypes[label] = itemType;
-                     keyToIndexes[key] = index++;
-                     labelToKeys[label] = key;
-                     listViewItems.Items.Add(label);
-                     if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
+                     var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
+                     if (valuesList.Length <= 1)
                      {
-                        var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
-                        if (valuesList.Length <= 1)
-                        {
-                           return "List types must have at least two items".Failure<Unit>();
-                        }
+                        return "List types must have at least two items".Failure<Unit>();
+                     }
 
-                        keyToList[key] = new StringSet(true, valuesList);
+                     keyToList[key] = new StringSet(true, valuesList);
+                  }
+               }
+            }
+
+            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            if (dataFile.Exists())
+            {
+               var _data =
+                  from source in dataFile.TryTo.Text
+                  from configurationFromString in Configuration.FromString(source)
+                  select configurationFromString;
+               if (_data.ValueOrCast(out var dataConfiguration, out Result<Unit> asUnit))
+               {
+                  foreach (var (key, value) in dataConfiguration.Values())
+                  {
+                     if (keyToIndexes.If(key, out index))
+                     {
+                        listViewItems.Items[index].SubItems.Add(value);
                      }
                   }
                }
-
-               if (configuration.DataFile.Exists())
+               else
                {
-                  var _data =
-                     from source in configuration.DataFile.TryTo.Text
-                     from configurationFromString in Configuration.FromString(source)
-                     select configurationFromString;
-                  if (_data.ValueOrCast(out var dataConfiguration, out asUnit))
-                  {
-                     foreach (var (key, value) in dataConfiguration.Values())
-                     {
-                        if (keyToIndexes.If(key, out index))
-                        {
-                           listViewItems.Items[index].SubItems.Add(value);
-                        }
-                     }
-                  }
+                  return asUnit;
                }
-
-               listViewItems.Items[0].Selected = true;
-
-               return Unit.Success();
             }
-            else
-            {
-               return asUnit;
-            }
+
+            listViewItems.Items[0].Selected = true;
+
+            return Unit.Success();
          }
          catch (Exception exception)
          {
@@ -279,7 +327,6 @@ namespace ReleasePalette
                }
 
                textValue.Text = value;
-               copyToClipboard();
 
                if (itemTypes.If(key, out var itemType))
                {
@@ -310,6 +357,7 @@ namespace ReleasePalette
          if (listViewItems.SelectedItems.Count > 0)
          {
             listViewItems.SelectedItems[0].SubItems[1].Text = textValue.Text;
+            saveData();
          }
       }
 
@@ -398,6 +446,19 @@ namespace ReleasePalette
          }
       }
 
+      protected Maybe<string> getTextItem(string key)
+      {
+         if (keyToIndexes.Map(key).If(out var index))
+         {
+            var item = listViewItems.Items[index];
+            return item.SubItems[1].Text.Some();
+         }
+         else
+         {
+            return none<string>();
+         }
+      }
+
       protected void textValue_TextChanged(object sender, EventArgs e)
       {
          var _result =
@@ -419,5 +480,75 @@ namespace ReleasePalette
             }
          }
       }
+
+      protected StringHash getReplacements()
+      {
+         var replacements = new StringHash(true);
+
+         foreach (var (key, index) in keyToIndexes)
+         {
+            var item = listViewItems.Items[index];
+            replacements[key] = item.SubItems[1].Text;
+         }
+
+         return replacements;
+      }
+
+      protected void openEmail(string fileName) => openEmailFrom(fileName, Enumerable.Empty<string>()).OnFailure(e => showException(e));
+
+      protected Result<Unit> openEmailFrom(string fileName, IEnumerable<string> attachments)
+      {
+         try
+         {
+            var replacements = getReplacements();
+
+            var resources = new Resources<ReleasePalette>();
+            var source = resources.String(fileName);
+            var generator = new EmailGenerator(source, personal);
+
+            return generator.Generate(replacements, attachments);
+         }
+         catch (Exception exception)
+         {
+            return failure<Unit>(exception);
+         }
+      }
+
+      protected void refreshDbEmail() => openEmail("RefreshDb.txt");
+
+      protected void migrateDbEmail() => openEmail("DbMigration.txt");
+
+      protected void deployEnvironmentEmail() => openEmail("Deploy.txt");
+
+      protected void releaseNotesEmail() => openEmail("Release note.txt");
+
+      protected void requestSecurityReviewEmail() => openEmail("Security.txt");
+
+      protected void requestPsrRunEmail() => openEmail("PsrRun.txt");
+
+      protected void postDeploymentValidationEmail()
+      {
+         if (getTextItem("build").If(out var build))
+         {
+            FolderName tempFolder = @"C:\Temp";
+            var tempBuildFolder = tempFolder[build];
+            if (tempBuildFolder.Exists())
+            {
+               var attachments = new List<string> { (tempBuildFolder + $"{build}.log").FullPath };
+               if (tempBuildFolder.Files.FirstOrNone(f => f.Name.StartsWith(build) && f.Extension == ".xlsx").If(out var excelFile))
+               {
+                  attachments.Add(excelFile.FullPath);
+               }
+
+               openEmailFrom("PostDeployment.txt", attachments);
+            }
+         }
+      }
+
+      protected void postDeploymentRequestEmail() => openEmail("DeployPostDeployment.txt");
+
+      protected void closedEmail() => openEmail("Closed.txt");
+
+      protected void ToDevelopEmail() => openEmail("ToDevelop.txt");
    }
 }
