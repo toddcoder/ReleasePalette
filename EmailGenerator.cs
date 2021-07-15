@@ -67,7 +67,7 @@ namespace ReleasePalette
          return writer.ToString();
       }
 
-      public Result<Unit> Generate(StringHash replacements, IEnumerable<string> attachments)
+      public Result<Unit> Generate(AutoStringHash replacements, IEnumerable<string> attachments)
       {
          replacements["otherTo"] = personal.OtherTo;
          replacements["notes-release"] = replacements["release"].Replace(".", "-");
@@ -111,17 +111,17 @@ namespace ReleasePalette
                htmlBody = removeH2(htmlBody);
                htmlBody = wrap(htmlBody);
 
-               var emailer = new Emailer { To = to, Cc = cc, Subject = subject, Body = htmlBody, AddSignature = addSignature };
+               var email = new Email { To = to, Cc = cc, Subject = subject, Body = htmlBody, AddSignature = addSignature };
                foreach (var attachment in attachments)
                {
                   FileName attachmentFile = attachment;
                   if (attachmentFile.Exists())
                   {
-                     emailer.AddAttachment(attachmentFile);
+                     email.AddAttachment(attachmentFile);
                   }
                }
 
-               return emailer.Open();
+               return email.Open();
             }
             else
             {

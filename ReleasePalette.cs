@@ -481,9 +481,9 @@ namespace ReleasePalette
          }
       }
 
-      protected StringHash getReplacements()
+      protected AutoStringHash getReplacements()
       {
-         var replacements = new StringHash(true);
+         var replacements = new AutoStringHash(true, string.Empty);
 
          foreach (var (key, index) in keyToIndexes)
          {

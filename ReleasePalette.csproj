@@ -75,6 +75,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Appointment.cs" />
+    <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="EmailGenerator.cs" />
     <Compile Include="Compare.cs">
       <SubType>Form</SubType>
@@ -83,9 +85,12 @@
       <DependentUpon>Compare.cs</DependentUpon>
     </Compile>
     <Compile Include="Comparer.cs" />
-    <Compile Include="Emailer.cs" />
+    <Compile Include="Email.cs" />
+    <Compile Include="IOutlookItem.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="ItemType.cs" />
+    <Compile Include="OutlookAppointmentItem.cs" />
+    <Compile Include="OutlookMailItem.cs" />
     <Compile Include="Personal.cs" />
     <Compile Include="Release.cs">
       <SubType>Form</SubType>

@@ -1,25 +1,23 @@
 ﻿using System.Collections.Generic;
-using Core.Assertions;
 using Core.Computers;
 using Core.Monads;
-using Microsoft.Office.Interop.Outlook;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
-   public class Emailer
+   public class Email
    {
-      protected Application application;
       protected Result<string> _to;
+      protected string to;
       protected Maybe<string> _cc;
       protected Result<string> _subject;
+      protected string subject;
       protected Result<string> _body;
+      protected string body;
       protected List<string> attachments;
 
-      public Emailer()
+      public Email()
       {
-         application = new Application();
-
          _to = "To is required".Failure<string>();
          _cc = none<string>();
          _subject = "Subject is required".Failure<string>();
@@ -56,41 +54,53 @@ namespace ReleasePalette
 
       public void AddAttachment(FileName file) => attachments.Add(file.FullPath);
 
+      public virtual IOutlookItem GetOutlookItem() => new OutlookMailItem();
+
+      protected virtual void checkArguments()
+      {
+         to = _to.ForceValue();
+         subject = _subject.ForceValue();
+         body = _body.ForceValue();
+      }
+
+      protected virtual void setArguments(IOutlookItem mailItem)
+      {
+         mailItem.To = to;
+         if (_cc.If(out var cc))
+         {
+            mailItem.Cc = cc;
+         }
+
+         mailItem.Subject = subject;
+      }
+
       public Result<Unit> Open()
       {
          try
          {
-            var to = _to.Must().BeSuccessful().Force();
-            var subject = _subject.Must().BeSuccessful().Force();
-            var body = _body.Must().BeSuccessful().Force();
+            checkArguments();
 
-            var mailItem = (MailItem)application.CreateItem(OlItemType.olMailItem);
-            mailItem.To = to;
-            if (_cc.If(out var cc))
-            {
-               mailItem.CC = cc;
-            }
+            var mailItem = GetOutlookItem();
 
-            mailItem.Subject = subject;
-            mailItem.BodyFormat = OlBodyFormat.olFormatHTML;
+            setArguments(mailItem);
 
             if (AddSignature)
             {
-               var _ = mailItem.GetInspector;
-               mailItem.HTMLBody = body + mailItem.HTMLBody;
+               mailItem.AddSignature();
+               mailItem.Body = body + mailItem.Body;
             }
             else
             {
-               mailItem.HTMLBody = body;
+               mailItem.Body = body;
             }
 
             foreach (var attachment in attachments)
             {
-               mailItem.Attachments.Add(attachment);
+               mailItem.AddAttachment(attachment);
             }
 
-            mailItem.Recipients.ResolveAll();
-            mailItem.Display(false);
+            mailItem.ResolveAll();
+            mailItem.Display();
 
             return Unit.Success();
 
