@@ -1,0 +1,7 @@
+﻿to: "EstreamSupport@eprod.com"
+subject: "{release} -> master -> develop"
+body: "- {release} merged to master [{masterPr}]({masterPr})
+- {tag} added
+- master-2d added
+- develop merged to master-2d [{developBuild}]({developBuild})
+- master-2d merged to develop [{master2dPr}]({master2dPr})"

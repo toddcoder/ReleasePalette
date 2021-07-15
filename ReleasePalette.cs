@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -6,7 +7,9 @@ using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
 using Core.Collections;
+using Core.Computers;
 using Core.Configurations;
+using Core.Enumerables;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -20,6 +23,7 @@ namespace ReleasePalette
    {
       protected ReleasePaletteConfiguration configuration;
       protected Configuration mapConfiguration;
+      protected Personal personal;
       protected FreeMenus menus;
       protected StringHash<ItemType> itemTypes;
       protected StringHash<int> keyToIndexes;
@@ -34,36 +38,53 @@ namespace ReleasePalette
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
-         ReleasePaletteConfiguration.Load()
-            .OnSuccess(newConfiguration => setConfiguration(newConfiguration).showTitle())
-            .OnFailure(loadException => showException(loadException));
-         var _mapConfiguration =
-            from source in configuration.MapFile.TryTo.Text
-            from configurationFromString in Configuration.FromString(source)
-            select configurationFromString;
-         _mapConfiguration
-            .OnSuccess(newConfiguration => setMapConfiguration(newConfiguration).showSuccess("Configurations loaded"))
-            .OnFailure(mapException => showException(mapException));
+         var _configurations =
+            from _configuration in ReleasePaletteConfiguration.Load()
+            from mapConfigurationSource in _configuration.MapFile.TryTo.Text
+            from _mapConfiguration in Configuration.FromString(mapConfigurationSource)
+            from personalSource in (_configuration.MapFile.Folder + "personal.configuration").TryTo.Text
+            from personalConfiguration in Configuration.FromString(personalSource)
+            from _personal in personalConfiguration.Deserialize<Personal>()
+            select (_configuration, _mapConfiguration, _personal);
+         if (_configurations.If(out configuration, out mapConfiguration, out personal, out var exception))
+         {
+            showSuccess("Configurations loaded");
 
-         menus = new FreeMenus { Form = this.Some<Form>() };
+            menus = new FreeMenus { Form = this.Some<Form>() };
 
-         menus.Menu("Commands");
-         menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
-         menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
-         menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
-         menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
+            menus.Menu("Commands");
+            menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
+            menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
+            menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
+            menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
-         menus.Menu("Tools");
-         menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
+            menus.Menu("Tools");
+            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
 
-         menus.Menu("Releases");
-         menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
+            menus.Menu("Releases");
+            menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
 
-         menus.Menu("Emails");
-         menus.Menu("Emails", "Test", (_, _) => testEmail());
-         menus.RenderMainMenu();
+            menus.Menu("Emails");
+            menus.Menu("Emails", "Refresh DB", (_, _) => refreshDbEmail());
+            menus.Menu("Emails", "Migrate DB", (_, _) => migrateDbEmail());
+            menus.Menu("Emails", "Deploy Build to Environment", (_, _) => deployEnvironmentEmail());
+            menus.Menu("Emails", "Release Notes", (_, _) => releaseNotesEmail());
+            menus.Menu("Emails", "Request Security Review", (_, _) => requestSecurityReviewEmail());
+            menus.Menu("Emails", "Request PSR Run", (_, _) => requestPsrRunEmail());
+            menus.MenuSeparator("Emails");
+            menus.Menu("Emails", "Post-Deployment Validation", (_, _) => postDeploymentValidationEmail());
+            menus.Menu("Emails", "Post-Deployment Request for EstreamPS and Staging18ua", (_, _) => postDeploymentRequestEmail());
+            menus.Menu("Emails", "Release Closed", (_, _) => closedEmail());
+            menus.Menu("Emails", "Release -> Master -> Develop", (_, _) => ToDevelopEmail());
 
-         loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(exception => showException(exception));
+            menus.RenderMainMenu();
+
+            loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(loadException => showException(loadException));
+         }
+         else
+         {
+            showException(exception);
+         }
       }
 
       protected void pasteFromClipboard()
@@ -185,7 +206,10 @@ namespace ReleasePalette
 
       protected void setRelease()
       {
-         using var releaseDialog = new Release { ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern };
+         using var releaseDialog = new Release
+         {
+            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, DataFolder = configuration.MapFile.Folder
+         };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
@@ -195,6 +219,7 @@ namespace ReleasePalette
             {
                saveData();
             }
+
             configuration.Save()
                .OnSuccess(_ =>
                {
@@ -302,7 +327,6 @@ namespace ReleasePalette
                }
 
                textValue.Text = value;
-               copyToClipboard();
 
                if (itemTypes.If(key, out var itemType))
                {
@@ -333,6 +357,7 @@ namespace ReleasePalette
          if (listViewItems.SelectedItems.Count > 0)
          {
             listViewItems.SelectedItems[0].SubItems[1].Text = textValue.Text;
+            saveData();
          }
       }
 
@@ -421,6 +446,19 @@ namespace ReleasePalette
          }
       }
 
+      protected Maybe<string> getTextItem(string key)
+      {
+         if (keyToIndexes.Map(key).If(out var index))
+         {
+            var item = listViewItems.Items[index];
+            return item.SubItems[1].Text.Some();
+         }
+         else
+         {
+            return none<string>();
+         }
+      }
+
       protected void textValue_TextChanged(object sender, EventArgs e)
       {
          var _result =
@@ -456,9 +494,9 @@ namespace ReleasePalette
          return replacements;
       }
 
-      protected void openEmail(string fileName) => openEmailFrom(fileName).OnFailure(e => showException(e));
+      protected void openEmail(string fileName) => openEmailFrom(fileName, Enumerable.Empty<string>()).OnFailure(e => showException(e));
 
-      protected Result<Unit> openEmailFrom(string fileName)
+      protected Result<Unit> openEmailFrom(string fileName, IEnumerable<string> attachments)
       {
          try
          {
@@ -466,9 +504,9 @@ namespace ReleasePalette
 
             var resources = new Resources<ReleasePalette>();
             var source = resources.String(fileName);
-            var generator = new EmailGenerator(source);
+            var generator = new EmailGenerator(source, personal);
 
-            return generator.Generate(replacements, Array.Empty<string>());
+            return generator.Generate(replacements, attachments);
          }
          catch (Exception exception)
          {
@@ -476,10 +514,41 @@ namespace ReleasePalette
          }
       }
 
-      protected void testEmail()
+      protected void refreshDbEmail() => openEmail("RefreshDb.txt");
+
+      protected void migrateDbEmail() => openEmail("DbMigration.txt");
+
+      protected void deployEnvironmentEmail() => openEmail("Deploy.txt");
+
+      protected void releaseNotesEmail() => openEmail("Release note.txt");
+
+      protected void requestSecurityReviewEmail() => openEmail("Security.txt");
+
+      protected void requestPsrRunEmail() => openEmail("PsrRun.txt");
+
+      protected void postDeploymentValidationEmail()
       {
-         var emailer = new Emailer { To = "Todd Bennett", Subject = "Test", Body = "Test" };
-         emailer.Open().OnFailure(e => showException(e));
+         if (getTextItem("build").If(out var build))
+         {
+            FolderName tempFolder = @"C:\Temp";
+            var tempBuildFolder = tempFolder[build];
+            if (tempBuildFolder.Exists())
+            {
+               var attachments = new List<string> { (tempBuildFolder + $"{build}.log").FullPath };
+               if (tempBuildFolder.Files.FirstOrNone(f => f.Name.StartsWith(build) && f.Extension == ".xlsx").If(out var excelFile))
+               {
+                  attachments.Add(excelFile.FullPath);
+               }
+
+               openEmailFrom("PostDeployment.txt", attachments);
+            }
+         }
       }
+
+      protected void postDeploymentRequestEmail() => openEmail("DeployPostDeployment.txt");
+
+      protected void closedEmail() => openEmail("Closed.txt");
+
+      protected void ToDevelopEmail() => openEmail("ToDevelop.txt");
    }
 }

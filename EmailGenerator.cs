@@ -1,10 +1,13 @@
 ﻿using System;
-using Core.Assertions;
+using System.Collections.Generic;
+using System.IO;
 using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
+using Core.Matching;
 using Core.Monads;
 using Core.Strings;
+using Markdig;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
@@ -12,10 +15,12 @@ namespace ReleasePalette
    public class EmailGenerator
    {
       protected string source;
+      protected Personal personal;
 
-      public EmailGenerator(string source)
+      public EmailGenerator(string source, Personal personal)
       {
          this.source = source;
+         this.personal = personal;
       }
 
       protected Result<Configuration> getEmailConfiguration() => Configuration.FromString(source);
@@ -30,11 +35,56 @@ namespace ReleasePalette
             select (to, cc, subject, body);
       }
 
-      public Result<Unit> Generate(StringHash replacements, string[] attachments)
+      protected static string removeH2(string html)
       {
-         var formatter = new Formatter(replacements);
+         if (html.StartsWith("<h2>"))
+         {
+            var removed = html.Drop(4);
+            if (removed.Matches("(</h2>)").If(out var result))
+            {
+               result.FirstGroup = string.Empty;
+               return result.ToString();
+            }
+         }
 
-         string replace(string source) => formatter.Format(source);
+         return html;
+      }
+
+      protected static string wrap(string html)
+      {
+         using var writer = new StringWriter();
+
+         writer.WriteLine("<html><style>");
+         writer.WriteLine("table {font-family: consolas; font-size: 12; border-collapse: collapse;}");
+         writer.WriteLine("th, td {border: 1px solid; padding: 5px;}");
+         writer.WriteLine("th {background-color: #dddddd; border-bottom: 2px solid}");
+         writer.WriteLine("tr:nth-child(even) {background-color: #dddddd;}");
+         writer.WriteLine("h2 {font-family: consolas; font-size: 12");
+         writer.WriteLine("</style><body>");
+         writer.WriteLine(html);
+         writer.WriteLine("</body></html>");
+
+         return writer.ToString();
+      }
+
+      public Result<Unit> Generate(StringHash replacements, IEnumerable<string> attachments)
+      {
+         replacements["otherTo"] = personal.OtherTo;
+         replacements["notes-release"] = replacements["release"].Replace(".", "-");
+         var pullRequestTitle = replacements["masterPrTitle"];
+         if (pullRequestTitle.Matches(@"^(Pull Request \d+)(.+)$").If(out var result))
+         {
+            replacements["pullRequestTitle1"] = result.FirstGroup;
+            replacements["pullRequestTitle2"] = result.SecondGroup;
+         }
+         else
+         {
+            replacements["pullRequestTitle2"] = pullRequestTitle;
+         }
+
+         replacements["tag"] = replacements["release"].Replace("r-", "v");
+
+         var formatter = new Formatter(replacements);
 
          try
          {
@@ -44,17 +94,31 @@ namespace ReleasePalette
                select tuple;
             if (_arguments.If(out var to, out var cc, out var subject, out var body, out var exception))
             {
-               to = replace(to);
-               cc = replace(cc);
-               subject = replace(subject);
-               body = replace(body);
+               to = formatter.Format(to);
+               cc = formatter.Format(cc);
+               subject = formatter.Format(subject);
+               body = formatter.Format(body);
 
-               var emailer = new Emailer { To = to, Cc = cc, Subject = subject, Body = body };
+               var addSignature = personal.Signature.IsEmpty();
+
+               if (!addSignature)
+               {
+                  body = $"{body}\r\n{personal.Signature}";
+               }
+
+               var pipeline = new MarkdownPipelineBuilder().UsePipeTables().Build();
+               var htmlBody = Markdown.ToHtml(body, pipeline);
+               htmlBody = removeH2(htmlBody);
+               htmlBody = wrap(htmlBody);
+
+               var emailer = new Emailer { To = to, Cc = cc, Subject = subject, Body = htmlBody, AddSignature = addSignature };
                foreach (var attachment in attachments)
                {
                   FileName attachmentFile = attachment;
-                  attachmentFile.Must().Exist().OrThrow();
-                  emailer.AddAttachment(attachmentFile);
+                  if (attachmentFile.Exists())
+                  {
+                     emailer.AddAttachment(attachmentFile);
+                  }
                }
 
                return emailer.Open();

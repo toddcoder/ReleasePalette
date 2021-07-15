@@ -24,6 +24,7 @@ namespace ReleasePalette
          _cc = none<string>();
          _subject = "Subject is required".Failure<string>();
          _body = "Body is required".Failure<string>();
+         AddSignature = true;
          attachments = new List<string>();
       }
 
@@ -51,6 +52,8 @@ namespace ReleasePalette
          set => _body = value.Success();
       }
 
+      public bool AddSignature { get; set; }
+
       public void AddAttachment(FileName file) => attachments.Add(file.FullPath);
 
       public Result<Unit> Open()
@@ -69,8 +72,18 @@ namespace ReleasePalette
             }
 
             mailItem.Subject = subject;
-            mailItem.Body = body;
             mailItem.BodyFormat = OlBodyFormat.olFormatHTML;
+
+            if (AddSignature)
+            {
+               var _ = mailItem.GetInspector;
+               mailItem.HTMLBody = body + mailItem.HTMLBody;
+            }
+            else
+            {
+               mailItem.HTMLBody = body;
+            }
+
             foreach (var attachment in attachments)
             {
                mailItem.Attachments.Add(attachment);
