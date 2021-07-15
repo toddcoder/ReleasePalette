@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ReleasePalette
+﻿namespace ReleasePalette
 {
    public interface IOutlookItem
    {
