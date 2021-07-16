@@ -168,5 +168,8 @@
   <ItemGroup>
     <EmbeddedResource Include="ToDevelop.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ScheduleDeployment.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

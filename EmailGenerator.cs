@@ -45,6 +45,8 @@ namespace ReleasePalette
             {
                arguments.Format(replacements);
                var item = getOutlookItem(arguments);
+
+               item.AddSignature();
                item.GenerateBody();
 
                foreach (var attachment in attachments)
@@ -56,7 +58,6 @@ namespace ReleasePalette
                   }
                }
 
-               item.AddSignature();
                item.ResolveAll();
                item.Display();
 

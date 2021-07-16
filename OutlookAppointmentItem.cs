@@ -7,6 +7,7 @@ namespace ReleasePalette
    public class OutlookAppointmentItem : IOutlookItem
    {
       protected AppointmentItem mailItem;
+      protected string body;
 
       public OutlookAppointmentItem(OutlookArguments arguments)
       {
@@ -24,7 +25,7 @@ namespace ReleasePalette
          }
 
          mailItem.Subject = arguments.Subject;
-         mailItem.Body = arguments.Body;
+         body = arguments.Body;
          mailItem.Location = arguments.Location;
       }
 
@@ -32,6 +33,7 @@ namespace ReleasePalette
 
       public void GenerateBody()
       {
+         mailItem.Body = body + mailItem.Body;
       }
 
       public void ResolveAll() => mailItem.Recipients.ResolveAll();

@@ -62,7 +62,7 @@ namespace ReleasePalette
          var pipeline = new MarkdownPipelineBuilder().UsePipeTables().Build();
          var htmlBody = Markdown.ToHtml(body, pipeline);
          htmlBody = removeH2(htmlBody);
-         mailItem.HTMLBody = wrap(htmlBody);
+         mailItem.HTMLBody = wrap(htmlBody) + mailItem.HTMLBody;
       }
 
       public void ResolveAll() => mailItem.Recipients.ResolveAll();
