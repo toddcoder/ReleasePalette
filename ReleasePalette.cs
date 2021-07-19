@@ -547,7 +547,7 @@ namespace ReleasePalette
 
       protected void requestPsrRunEmail() => openEmail("PsrRun.txt");
 
-      protected void scheduleDeploymentEmail() => openEmail("ScheduleDeployment.txt");
+      protected void scheduleDeploymentEmail() => openAppointment("ScheduleDeployment.txt");
 
       protected void postDeploymentValidationEmail()
       {
@@ -568,7 +568,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void postDeploymentRequestEmail() => openAppointment("DeployPostDeployment.txt");
+      protected void postDeploymentRequestEmail() => openEmail("DeployPostDeployment.txt");
 
       protected void closedEmail() => openEmail("Closed.txt");
 
