@@ -79,6 +79,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppointmentGenerator.cs" />
+    <Compile Include="Content\Alignment.cs" />
+    <Compile Include="Content\Formatting.cs" />
+    <Compile Include="Content\Grid.cs" />
+    <Compile Include="Content\GridCell.cs" />
+    <Compile Include="Content\GridLine.cs" />
+    <Compile Include="Content\IDocumentRenderer.cs" />
+    <Compile Include="Content\IParagraphRenderer.cs" />
+    <Compile Include="Content\ITableRowRenderer.cs" />
+    <Compile Include="Content\Items.cs" />
+    <Compile Include="Content\Item.cs" />
+    <Compile Include="Content\LineFeed.cs" />
+    <Compile Include="Content\ParagraphFormatting.cs" />
     <Compile Include="EmailGenerator.cs" />
     <Compile Include="Compare.cs">
       <SubType>Form</SubType>
@@ -90,6 +102,7 @@
     <Compile Include="IOutlookItem.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="ItemType.cs" />
+    <Compile Include="Content\MailContent.cs" />
     <Compile Include="OutlookAppointmentItem.cs" />
     <Compile Include="OutlookArguments.cs" />
     <Compile Include="OutlookMailItem.cs" />
@@ -175,5 +188,6 @@
   <ItemGroup>
     <EmbeddedResource Include="ScheduleDeployment.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
