@@ -48,6 +48,11 @@ namespace ReleasePalette
          }
 
          replacements["tag"] = replacements["release"].Replace("r-", "v");
+         replacements["location"] = Location;
+
+         var outage = replacements["outageType"].Same("Outage") ? "YES" : "NO";
+         replacements["database"] = outage;
+         replacements["outage"] = outage;
 
          var formatter = new Formatter(replacements);
          To = formatter.Format(To);
@@ -55,6 +60,7 @@ namespace ReleasePalette
          Subject = formatter.Format(Subject);
          Body = formatter.Format(Body);
          Location = formatter.Format(Location);
+         replacements["location"] = Location;
       }
    }
 }

@@ -1,14 +1,13 @@
 ﻿to: "Evolve Release Management team; Sukumaran, Sunil; Long, Jack; Price, Sean; {otherTo}; Engdorf, Paul; Bowser, William; Burcham, Eric"
 subject: "{releaseType} {outageType} {release} deployment request to production"
-body: "
-Remedy:        {remedy}
+body: "Remedy:        https://smartit.eprod.com/smartit/app/#/search//{remedy}
 Zoom:          {location}
 Environment:   Estream Production
 Build:         Estream_CI
 Build Version: {build}
 Drop Folder:   NO
-Database:      YES
+Database:      {database}
 Code:          YES
 SSRS:          YES
 SSIS:          NO
-Outage:        YES"
+Outage:        {outage}"
