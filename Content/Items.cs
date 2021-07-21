@@ -1,21 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Core.Monads;
+using SautinSoft.Document;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
 {
-   public class Items : IEnumerable<Item>
+   public class Items : Content
    {
       protected List<Item> items;
 
       public Items()
       {
          items = new List<Item>();
+         ParagraphFormat = none<ParagraphFormatting>();
       }
 
       public void Add(Item item) => items.Add(item);
 
-      public IEnumerator<Item> GetEnumerator() => items.GetEnumerator();
+      public Maybe<ParagraphFormatting> ParagraphFormat { get; set; }
 
-      IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+      public override void Render(DocumentCore documentCore, Section section)
+      {
+      }
    }
 }

@@ -1,14 +1,17 @@
 ﻿using Core.Collections;
+using Core.Exceptions;
 using Core.Monads;
 using Core.Matching;
 using Core.Strings;
+using SautinSoft.Document;
+using static Core.Monads.AttemptFunctions;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
 {
-   public class ParagraphFormatting
+   public class ParagraphFormatting : Formatting
    {
-      protected static Result<ParagraphFormatting> fromSpecification(string styleName, string specification)
+      protected static Result<Formatting> fromSpecification(string styleName, string specification)
       {
          var data = new StringHash<object>(true);
          foreach (var specifier in specification.Split(@"\s*;\s*"))
@@ -26,7 +29,7 @@ namespace ReleasePalette.Content
             }
             else
             {
-               return $"Didn't understand specifier '{name}'".Failure<ParagraphFormatting>();
+               return $"Didn't understand specifier '{name}'".Failure<Formatting>();
             }
          }
 
@@ -34,23 +37,48 @@ namespace ReleasePalette.Content
          var spaceBefore = data.Map("space-before").CastAs<double>().DefaultTo(() => 1.0);
          var spaceAfter = data.Map("space-after").CastAs<double>().DefaultTo(() => 1.0);
 
-         return new ParagraphFormatting(styleName, alignment, spaceBefore, spaceAfter).Success();
+         return new ParagraphFormatting(styleName, alignment, spaceBefore, spaceAfter).Success<Formatting>();
       }
 
-      public ParagraphFormatting(string styleName, Alignment alignment, double spaceBefore, double spaceAfter)
+      public static Result<Formatting> FromSpecification(string styleName, string specification)
       {
-         StyleName = styleName;
+         return tryTo(() => fromSpecification(styleName, specification));
+      }
+
+      public ParagraphFormatting(string styleName, Alignment alignment, double spaceBefore, double spaceAfter) : base(styleName)
+      {
          Alignment = alignment;
          SpaceBefore = spaceBefore;
          SpaceAfter = spaceAfter;
       }
-
-      public string StyleName { get; }
 
       public Alignment Alignment { get; }
 
       public double SpaceBefore { get; }
 
       public double SpaceAfter { get; }
+
+      public override bool IsCharacter => false;
+
+      public override bool IsParagraph => true;
+
+      protected HorizontalAlignment getHorizontalAlignment() => Alignment switch
+      {
+         Alignment.Left => HorizontalAlignment.Left,
+         Alignment.Right => HorizontalAlignment.Right,
+         Alignment.Center => HorizontalAlignment.Center,
+         Alignment.Justify => HorizontalAlignment.Justify,
+         _ => throw $"Didn't understand alignment {Alignment}".Throws()
+      };
+
+      protected ParagraphFormat paragraphFormat()
+      {
+         return new()
+         {
+            Style = new ParagraphStyle(StyleName), Alignment = getHorizontalAlignment(), SpaceBefore = SpaceBefore, SpaceAfter = SpaceAfter
+         };
+      }
+
+      public override Result<Format> Format() => tryTo(paragraphFormat).CastAs<Format>();
    }
 }

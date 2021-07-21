@@ -1,7 +1,21 @@
-﻿namespace ReleasePalette.Content
+﻿using System.Collections;
+using System.Collections.Generic;
+
+namespace ReleasePalette.Content
 {
-   public class GridLine
+   public class GridLine : IEnumerable<GridCell>
    {
-      protected 
+      protected List<GridCell> gridCells;
+
+      public GridLine()
+      {
+         gridCells = new List<GridCell>();
+      }
+
+      public void Add(GridCell gridCell) => gridCells.Add(gridCell);
+
+      public IEnumerator<GridCell> GetEnumerator() => gridCells.GetEnumerator();
+
+      IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
    }
 }

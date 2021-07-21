@@ -80,11 +80,14 @@
   <ItemGroup>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="Content\Alignment.cs" />
+    <Compile Include="Content\CharacterFormatting.cs" />
+    <Compile Include="Content\Content.cs" />
     <Compile Include="Content\Formatting.cs" />
     <Compile Include="Content\Grid.cs" />
     <Compile Include="Content\GridCell.cs" />
     <Compile Include="Content\GridLine.cs" />
     <Compile Include="Content\IDocumentRenderer.cs" />
+    <Compile Include="Content\IFormatting.cs" />
     <Compile Include="Content\IParagraphRenderer.cs" />
     <Compile Include="Content\ITableRowRenderer.cs" />
     <Compile Include="Content\Items.cs" />
