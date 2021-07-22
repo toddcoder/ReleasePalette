@@ -71,14 +71,14 @@ namespace ReleasePalette.Content
          _ => throw $"Didn't understand alignment {Alignment}".Throws()
       };
 
-      protected ParagraphFormat paragraphFormat()
+      protected ParagraphStyle paragraphFormat()
       {
-         return new()
+         return new(StyleName)
          {
-            Style = new ParagraphStyle(StyleName), Alignment = getHorizontalAlignment(), SpaceBefore = SpaceBefore, SpaceAfter = SpaceAfter
+            ParagraphFormat = new ParagraphFormat { Alignment = getHorizontalAlignment(), SpaceBefore = SpaceBefore, SpaceAfter = SpaceAfter }
          };
       }
 
-      public override Result<Format> Format() => tryTo(paragraphFormat).CastAs<Format>();
+      public override Result<Style> Style() => tryTo(paragraphFormat).CastAs<Style>();
    }
 }

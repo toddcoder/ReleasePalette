@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Core.Collections;
 using Core.Matching;
 using Core.Monads;
@@ -124,9 +125,30 @@ namespace ReleasePalette.Content
 
       protected Matched<Content> parseTable()
       {
-         var grid = new Grid();
+         var grid = new Lazy<Grid>(() => new Grid());
 
-         return grid.Match<Content>();
+         while (source.NextLineMatch(@"^\|\s*").If(out var result, out var line))
+         {
+            line = line.Drop(result.Length);
+            var cells = line.Split(@"\s*\|\s*");
+            var gridLine = new GridLine();
+            var gridCell = new GridCell();
+            foreach (var cell in cells)
+            {
+               var items = new Items();
+               foreach (var item in getItems(cell))
+               {
+                  items.Add(item);
+               }
+
+               gridCell.Add(items);
+            }
+
+            gridLine.Add(gridCell);
+            grid.Value.Add(gridLine);
+         }
+
+         return grid.IsValueCreated ? grid.Value.Match<Content>() : noMatch<Content>();
       }
 
       public Result<string> Parse()
@@ -152,13 +174,17 @@ namespace ReleasePalette.Content
             }
          }
 
-         /*foreach (var (styleName, formatting) in styles)
+         foreach (var (_, formatting) in styles)
          {
-            if (formatting.Format().ValueOrCast(out var format, out Result<string> asString))
+            if (formatting.Style().ValueOrCast(out var style, out Result<string> asString))
             {
-               documentCore.Styles.Add();
+               style.Document.Styles.Add(style);
             }
-         }*/
+            else
+            {
+               return asString;
+            }
+         }
 
          foreach (var content in contents)
          {

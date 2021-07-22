@@ -28,6 +28,6 @@ namespace ReleasePalette.Content
 
       public abstract bool IsParagraph { get; }
 
-      public abstract Result<Format> Format();
+      public abstract Result<Style> Style();
    }
 }

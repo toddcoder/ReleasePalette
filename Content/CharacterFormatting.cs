@@ -70,11 +70,11 @@ namespace ReleasePalette.Content
 
       public override bool IsParagraph => false;
 
-      protected CharacterFormat characterFormat()
+      protected CharacterStyle characterFormat()
       {
-         return new() { Style = new CharacterStyle(StyleName), FontName = FontName, Size = Size, Bold = Bold, Italic = Italic };
+         return new(StyleName) { CharacterFormat = { FontName = FontName, Size = Size, Bold = Bold, Italic = Italic } };
       }
 
-      public override Result<Format> Format() => tryTo(characterFormat).CastAs<Format>();
+      public override Result<Style> Style() => tryTo(characterFormat).CastAs<Style>();
    }
 }
