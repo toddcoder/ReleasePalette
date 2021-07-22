@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace ReleasePalette.Content
 {
-   public class GridCell
+   public class GridCell : IEnumerable<Items>
    {
       protected List<Items> content;
 
@@ -12,5 +13,9 @@ namespace ReleasePalette.Content
       }
 
       public void Add(Items items) => content.Add(items);
+
+      public IEnumerator<Items> GetEnumerator() => content.GetEnumerator();
+
+      IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
    }
 }

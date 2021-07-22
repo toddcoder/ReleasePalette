@@ -12,6 +12,8 @@ namespace ReleasePalette.Content
          gridCells = new List<GridCell>();
       }
 
+      public int CellCount => gridCells.Count;
+
       public void Add(GridCell gridCell) => gridCells.Add(gridCell);
 
       public IEnumerator<GridCell> GetEnumerator() => gridCells.GetEnumerator();

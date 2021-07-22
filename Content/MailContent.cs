@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using Core.Collections;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
 using SautinSoft.Document;
+using static Core.Monads.AttemptFunctions;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
@@ -98,7 +99,7 @@ namespace ReleasePalette.Content
             items.Add(item);
          }
 
-         return items.Match<Content>();
+         return items.Matched();
       }
 
       protected IEnumerable<Item> getItems(string line)
@@ -125,16 +126,16 @@ namespace ReleasePalette.Content
 
       protected Matched<Content> parseTable()
       {
-         var grid = new Lazy<Grid>(() => new Grid());
+         var grid = new Grid();
 
          while (source.NextLineMatch(@"^\|\s*").If(out var result, out var line))
          {
             line = line.Drop(result.Length);
             var cells = line.Split(@"\s*\|\s*");
             var gridLine = new GridLine();
-            var gridCell = new GridCell();
             foreach (var cell in cells)
             {
+               var gridCell = new GridCell();
                var items = new Items();
                foreach (var item in getItems(cell))
                {
@@ -142,16 +143,15 @@ namespace ReleasePalette.Content
                }
 
                gridCell.Add(items);
+               gridLine.Add(gridCell);
             }
-
-            gridLine.Add(gridCell);
-            grid.Value.Add(gridLine);
+            grid.Add(gridLine);
          }
 
-         return grid.IsValueCreated ? grid.Value.Match<Content>() : noMatch<Content>();
+         return grid.Matched();
       }
 
-      public Result<string> Parse()
+      protected Result<string> parse()
       {
          if (parseStyles().IfNot(out var exception))
          {
@@ -191,7 +191,14 @@ namespace ReleasePalette.Content
             content.Render(documentCore, section);
          }
 
-         return documentCore.ToString().Success();
+         using var memoryStream = new MemoryStream();
+         documentCore.Save(memoryStream, SaveOptions.RtfDefault);
+         memoryStream.Position = 0;
+         using var reader = new StreamReader(memoryStream);
+
+         return reader.ReadToEnd().Success();
       }
+
+      public Result<string> Parse() => tryTo(parse);
    }
 }

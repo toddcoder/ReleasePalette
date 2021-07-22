@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Office.Interop.Outlook;
 using Core.Matching;
+using ReleasePalette.Content;
 
 namespace ReleasePalette
 {
@@ -33,7 +34,11 @@ namespace ReleasePalette
 
       public void GenerateBody()
       {
-         mailItem.Body = body + mailItem.Body;
+         var mailContent = new MailContent(body);
+         if (mailContent.Parse().If(out var newBody))
+         {
+            mailItem.Body = newBody + mailItem.Body;
+         }
       }
 
       public void ResolveAll() => mailItem.Recipients.ResolveAll();
