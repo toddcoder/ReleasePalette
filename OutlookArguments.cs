@@ -15,10 +15,6 @@ namespace ReleasePalette
          Personal = personal;
       }
 
-      public OutlookArguments(string to, string cc, string subject, string body) : this(to, cc, subject, body, new Personal())
-      {
-      }
-
       public string To { get; set; }
 
       public string Cc { get; set; }
