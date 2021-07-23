@@ -79,6 +79,10 @@ namespace ReleasePalette.Content
                paragraph.ParagraphFormat.Style = (ParagraphStyle)documentCore.Styles[styleName];
             }
          }
+         else
+         {
+            paragraph.ParagraphFormat = new ParagraphFormat { SpaceBefore = 0.0, SpaceAfter = 0.0 };
+         }
 
          foreach (var item in items)
          {

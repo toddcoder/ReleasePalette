@@ -21,7 +21,7 @@ namespace ReleasePalette.Content
             var _object = name switch
             {
                "font-name" => value.Some<object>(),
-               "font-size" => value.AsInt().CastAs<object>(),
+               "size" => value.AsDouble().CastAs<object>(),
                "bold" or "italic" => value.Same("true").Some<object>(),
                _ => none<object>()
             };
@@ -37,9 +37,9 @@ namespace ReleasePalette.Content
 
          return
             from fontNameAssert in data.Must().HaveKeyOf("font-name").OrFailure()
-            from fontSizeAssert in data.Must().HaveKeyOf("font-size").OrFailure()
+            from fontSizeAssert in data.Must().HaveKeyOf("size").OrFailure()
             from fontName in data.TryTo["font-name"].CastAs<string>()
-            from fontSize in data.TryTo["font-size"].CastAs<double>()
+            from fontSize in data.TryTo["size"].CastAs<double>()
             from bold in data.Map("bold").DefaultTo(() => false).CastAs<bool>()
             from italic in data.Map("italic").DefaultTo(() => false).CastAs<bool>()
             select (Formatting)new CharacterFormatting(styleName, fontName, fontSize, bold, italic);

@@ -2,7 +2,6 @@
 using System.Text;
 using Microsoft.Office.Interop.Outlook;
 using Core.Matching;
-using Core.Strings;
 using ReleasePalette.Content;
 
 namespace ReleasePalette
@@ -36,10 +35,10 @@ namespace ReleasePalette
 
       protected static string joinRtf(string rtf1, string rtf2)
       {
-         var builder = new StringBuilder();
-         builder.Append(rtf1.Drop(-1));
-         builder.Append(@"\par");
-         builder.Append(rtf2.Drop(1));
+         var builder = new StringBuilder(@"{\rtf1\ansi");
+         builder.Append(rtf1);
+         builder.Append(rtf2);
+         builder.Append("}");
 
          return builder.ToString();
       }
@@ -49,9 +48,7 @@ namespace ReleasePalette
          var mailContent = new MailContent(body);
          if (mailContent.Parse().If(out var newBody))
          {
-            var signature = (string)Encoding.ASCII.GetString(mailItem.RTFBody);
-            var joinedBody = joinRtf(newBody, signature);
-            var rtfBody = Encoding.ASCII.GetBytes(joinedBody);
+            var rtfBody = Encoding.ASCII.GetBytes(newBody);
             mailItem.RTFBody = rtfBody;
          }
       }
@@ -60,7 +57,6 @@ namespace ReleasePalette
 
       public void AddSignature()
       {
-         var _ = mailItem.GetInspector;
       }
 
       public void Display() => mailItem.Display(false);

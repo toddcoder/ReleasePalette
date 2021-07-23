@@ -28,7 +28,7 @@ namespace ReleasePalette
 
       public void SetReplacements(AutoStringHash replacements)
       {
-         replacements["otherTo"] = OtherTo;
+         replacements["other-to"] = OtherTo;
          replacements["signature"] = Signature;
          replacements["zoom.url"] = ZoomUrl;
          replacements["zoom.meetingId"] = ZoomMeetingId;

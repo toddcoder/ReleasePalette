@@ -80,9 +80,10 @@ namespace ReleasePalette.Content
       protected Matched<Content> parseParagraph()
       {
          var items = new Items();
+         var styleName = string.Empty;
          if (source.NextLineMatch(@"^>\s*(?:\[([\w-]+)\]\s*)?").If(out var result, out var line))
          {
-            var styleName = result.FirstGroup;
+            styleName = result.FirstGroup;
             line = line.Drop(result.Length).TrimLeft();
             items.ParagraphFormat = getParagraphFormatting(styleName);
          }
@@ -93,7 +94,7 @@ namespace ReleasePalette.Content
          }
          else
          {
-            foreach (var item in getItems(line))
+            foreach (var item in getItems(line, styleName))
             {
                items.Add(item);
             }
@@ -102,14 +103,14 @@ namespace ReleasePalette.Content
          return items.Matched();
       }
 
-      protected IEnumerable<Item> getItems(string line)
+      protected IEnumerable<Item> getItems(string line, string styleName)
       {
          if (line.Matches(@"^([^\[]*)").If(out var result))
          {
             var text = result.FirstGroup;
             if (text.IsNotEmpty())
             {
-               yield return new Item(text);
+               yield return new Item(text) { CharacterFormatting = getCharacterFormatting(styleName) };
 
                line = line.Drop(text.Length);
             }
@@ -117,7 +118,7 @@ namespace ReleasePalette.Content
 
          foreach (var match in line.AllMatches(@"\[([\w-]+)\]([^\]]*)"))
          {
-            var styleName = match.FirstGroup;
+            styleName = match.FirstGroup;
             var text = match.SecondGroup;
             var item = new Item(text) { CharacterFormatting = getCharacterFormatting(styleName) };
             yield return item;
@@ -137,7 +138,7 @@ namespace ReleasePalette.Content
             {
                var gridCell = new GridCell();
                var items = new Items();
-               foreach (var item in getItems(cell))
+               foreach (var item in getItems(cell, string.Empty))
                {
                   items.Add(item);
                }
@@ -179,7 +180,7 @@ namespace ReleasePalette.Content
          {
             if (formatting.Style().ValueOrCast(out var style, out Result<string> asString))
             {
-               style.Document.Styles.Add(style);
+               documentCore.Styles.Add(style);
             }
             else
             {
