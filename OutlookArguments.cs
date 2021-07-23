@@ -6,23 +6,20 @@ namespace ReleasePalette
 {
    public class OutlookArguments
    {
-      public OutlookArguments(string to, string otherTo, string cc, string subject, string body, string location)
+      public OutlookArguments(string to, string cc, string subject, string body, Personal personal)
       {
          To = to;
-         OtherTo = otherTo;
          Cc = cc;
          Subject = subject;
          Body = body;
-         Location = location;
+         Personal = personal;
       }
 
-      public OutlookArguments(string to, string otherTo, string cc, string subject, string body) : this(to, otherTo, cc, subject, body, string.Empty)
+      public OutlookArguments(string to, string cc, string subject, string body) : this(to, cc, subject, body, new Personal())
       {
       }
 
       public string To { get; set; }
-
-      public string OtherTo { get; set; }
 
       public string Cc { get; set; }
 
@@ -30,11 +27,10 @@ namespace ReleasePalette
 
       public string Body { get; set; }
 
-      public string Location { get; set; }
+      public Personal Personal { get; set; }
 
       public void Format(AutoStringHash replacements)
       {
-         replacements["otherTo"] = OtherTo;
          replacements["notes-release"] = replacements["release"].Replace(".", "-");
          var pullRequestTitle = replacements["masterPrTitle"];
          if (pullRequestTitle.Matches(@"^(Pull Request \d+)(.+)$").If(out var result))
@@ -48,19 +44,17 @@ namespace ReleasePalette
          }
 
          replacements["tag"] = replacements["release"].Replace("r-", "v");
-         replacements["location"] = Location;
 
          var outage = replacements["outageType"].Same("Outage") ? "YES" : "NO";
          replacements["database"] = outage;
          replacements["outage"] = outage;
+         Personal.SetReplacements(replacements);
 
          var formatter = new Formatter(replacements);
          To = formatter.Format(To);
          Cc = formatter.Format(Cc);
          Subject = formatter.Format(Subject);
          Body = formatter.Format(Body);
-         Location = formatter.Format(Location);
-         replacements["location"] = Location;
       }
    }
 }

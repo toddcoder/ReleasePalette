@@ -15,7 +15,7 @@ namespace ReleasePalette
             from to in configuration.GetValue("to").Result("'To' is required")
             from subject in configuration.GetValue("subject").Result("'Subject' is required")
             from body in configuration.GetValue("body").Result("'Body' is required")
-            select new OutlookArguments(to, personal.OtherTo, string.Empty, subject, body, personal.Location);
+            select new OutlookArguments(to, string.Empty, subject, body, personal);
       }
 
       protected override IOutlookItem getOutlookItem(OutlookArguments arguments) => new OutlookAppointmentItem(arguments);

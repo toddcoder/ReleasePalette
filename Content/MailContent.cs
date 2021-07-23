@@ -12,13 +12,6 @@ namespace ReleasePalette.Content
 {
    public class MailContent
    {
-      protected enum Stage
-      {
-         Style,
-         Paragraph,
-         Table
-      }
-
       protected Source source;
       protected DocumentCore documentCore;
       protected Section section;
@@ -94,9 +87,16 @@ namespace ReleasePalette.Content
             items.ParagraphFormat = getParagraphFormatting(styleName);
          }
 
-         foreach (var item in getItems(line))
+         if (line == "!")
          {
-            items.Add(item);
+            items.Add(new Item("\n"));
+         }
+         else
+         {
+            foreach (var item in getItems(line))
+            {
+               items.Add(item);
+            }
          }
 
          return items.Matched();
@@ -145,6 +145,7 @@ namespace ReleasePalette.Content
                gridCell.Add(items);
                gridLine.Add(gridCell);
             }
+
             grid.Add(gridLine);
          }
 

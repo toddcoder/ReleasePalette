@@ -28,7 +28,7 @@ namespace ReleasePalette
             from cc in configuration.GetValue("cc").DefaultTo(() => string.Empty).Success()
             from subject in configuration.GetValue("subject").Result("'Subject' is required")
             from body in configuration.GetValue("body").Result("'Body' is required")
-            select new OutlookArguments(to, personal.OtherTo, cc, subject, body);
+            select new OutlookArguments(to, cc, subject, body);
       }
 
       protected virtual IOutlookItem getOutlookItem(OutlookArguments arguments) => new OutlookMailItem(arguments);

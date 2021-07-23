@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Text;
 using Microsoft.Office.Interop.Outlook;
 using Core.Matching;
+using Core.Strings;
 using ReleasePalette.Content;
 
 namespace ReleasePalette
@@ -27,17 +29,30 @@ namespace ReleasePalette
 
          mailItem.Subject = arguments.Subject;
          body = arguments.Body;
-         mailItem.Location = arguments.Location;
+         mailItem.Location = arguments.Personal.ZoomUrl;
       }
 
       public void AddAttachment(string attachment) => mailItem.Attachments.Add(attachment);
+
+      protected static string joinRtf(string rtf1, string rtf2)
+      {
+         var builder = new StringBuilder();
+         builder.Append(rtf1.Drop(-1));
+         builder.Append(@"\par");
+         builder.Append(rtf2.Drop(1));
+
+         return builder.ToString();
+      }
 
       public void GenerateBody()
       {
          var mailContent = new MailContent(body);
          if (mailContent.Parse().If(out var newBody))
          {
-            mailItem.Body = newBody + mailItem.Body;
+            var signature = (string)Encoding.ASCII.GetString(mailItem.RTFBody);
+            var joinedBody = joinRtf(newBody, signature);
+            var rtfBody = Encoding.ASCII.GetBytes(joinedBody);
+            mailItem.RTFBody = rtfBody;
          }
       }
 

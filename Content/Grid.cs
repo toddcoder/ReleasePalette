@@ -22,7 +22,7 @@ namespace ReleasePalette.Content
 
       public override void Render(DocumentCore documentCore, Section section)
       {
-         var table = new Table(documentCore);
+         var table = new Table(documentCore) { TableFormat = { DefaultCellPadding = new Padding(0.05, 0.01, 0.05, 0.01, LengthUnit.Inch) } };
          section.Blocks.Add(table);
 
          var maxCellCount = gridLines.Max(gl => gl.CellCount);
