@@ -71,6 +71,7 @@ namespace ReleasePalette
             menus.Menu("Emails", "Release Notes", (_, _) => releaseNotesEmail());
             menus.Menu("Emails", "Request Security Review", (_, _) => requestSecurityReviewEmail());
             menus.Menu("Emails", "Request PSR Run", (_, _) => requestPsrRunEmail());
+            menus.Menu("Emails", "Schedule Deployment", (_, _) => scheduleDeploymentEmail());
             menus.MenuSeparator("Emails");
             menus.Menu("Emails", "Post-Deployment Validation", (_, _) => postDeploymentValidationEmail());
             menus.Menu("Emails", "Post-Deployment Request for EstreamPS and Staging18ua", (_, _) => postDeploymentRequestEmail());
@@ -481,9 +482,9 @@ namespace ReleasePalette
          }
       }
 
-      protected StringHash getReplacements()
+      protected AutoStringHash getReplacements()
       {
-         var replacements = new StringHash(true);
+         var replacements = new AutoStringHash(true, string.Empty);
 
          foreach (var (key, index) in keyToIndexes)
          {
@@ -514,6 +515,26 @@ namespace ReleasePalette
          }
       }
 
+      protected void openAppointment(string fileName) => openAppointmentFrom(fileName, Enumerable.Empty<string>()).OnFailure(e => showException(e));
+
+      protected Result<Unit> openAppointmentFrom(string fileName, IEnumerable<string> attachments)
+      {
+         try
+         {
+            var replacements = getReplacements();
+
+            var resources = new Resources<ReleasePalette>();
+            var source = resources.String(fileName);
+            var generator = new AppointmentGenerator(source, personal);
+
+            return generator.Generate(replacements, attachments);
+         }
+         catch (Exception exception)
+         {
+            return failure<Unit>(exception);
+         }
+      }
+
       protected void refreshDbEmail() => openEmail("RefreshDb.txt");
 
       protected void migrateDbEmail() => openEmail("DbMigration.txt");
@@ -525,6 +546,8 @@ namespace ReleasePalette
       protected void requestSecurityReviewEmail() => openEmail("Security.txt");
 
       protected void requestPsrRunEmail() => openEmail("PsrRun.txt");
+
+      protected void scheduleDeploymentEmail() => openAppointment("ScheduleDeployment.txt");
 
       protected void postDeploymentValidationEmail()
       {

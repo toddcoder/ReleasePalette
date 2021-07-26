@@ -1,0 +1,26 @@
+﻿to: "Evolve Release Management team; Sukumaran, Sunil; Long, Jack; Price, Sean; {other-to}; Engdorf, Paul; Bowser, William; Burcham, Eric"
+subject: "{releaseType} {outageType} {release} deployment request to production"
+body: "standard->font-name=Times New Roman;size=12
+italic->font-name=Times New Roman;size=12;italic=true
+bold->font-name=Times New Roman;size=12;bold=true
+fixed->font-name=Consolas;size=11
+|Remedy|{remedy}@https://smartit.eprod.com/smartit/app/#/search//{remedy}
+|Zoom|{zoom.url}
+|Environment|Estream Production
+|Build|Estream_CI
+|Build Version|{build}
+|Drop Folder|NO
+|Database|{database}
+|Code|YES
+|SSRS|YES
+|SSIS|NO
+|Outage|{outage}
+>!
+> This deployment will be made with the participants coordinating through Zoom.
+|Meeting URL|{zoom.url}
+|Meeting ID|{zoom.meetingId}
+|Password|{zoom.password}
+>!
+>If you cannot join using computer audio, join by telephone; dial {zoom.phone}
+>!
+{signature}"
