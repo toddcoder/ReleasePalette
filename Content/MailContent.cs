@@ -1,206 +1,131 @@
 ﻿using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using Core.Collections;
+using Core.Enumerables;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using SautinSoft.Document;
-using static Core.Monads.AttemptFunctions;
+using Elistia.DotNetRtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
 {
    public class MailContent
    {
-      protected Source source;
-      protected DocumentCore documentCore;
-      protected Section section;
-      protected StringHash<Formatting> styles;
-      protected List<Content> contents;
+      protected const string PATTERN_STYLE_DEFINITION = @"^([\w-]+)\s*:\s*";
+      protected const string PATTERN_TABLE_WIDTHS = @"^&table\(([^\)]+)\)";
+      protected const string PATTERN_SPLIT_ON_COMMA = @"\s*,\s*";
+      protected const string PATTERN_TABLE_ROW = @"^\|";
+      protected const string PATTERN_LINE_BREAK = "^>!";
+      protected const string PATTERN_STYLED_PARAGRAPH = @"^>\s*\[([\w-]+)\]\s*";
+      protected const string PATTERN_PARAGRAPH = "^>";
 
-      public MailContent(string source)
+      protected State state;
+
+      public MailContent()
       {
-         this.source = new Source(source);
-
-         documentCore = new DocumentCore();
-         section = new Section(documentCore);
-         documentCore.Sections.Add(section);
-
-         styles = new StringHash<Formatting>(true);
-         contents = new List<Content>();
+         var document = new RtfDocument(PaperSize.Letter, PaperOrientation.Portrait, Lcid.English);
+         state = new State(document);
       }
 
-      protected Result<Unit> parseStyles()
+      public Result<RtfDocument> Parse(string text)
       {
-         while (source.NextLineMatch(@"^([\w-]+)\s*([-=])>").If(out var result, out var line))
+         var source = new Source(text);
+         var tableLines = new List<string>();
+         var paragraphLines = new List<string>();
+         var _style = none<Style>();
+         var generators = new List<Generator>();
+         var widths = new List<float>();
+
+         void generateTable()
          {
-            var (styleName, type) = result;
-            var specification = line.Drop(result.Length);
-            var isCharacter = type == "-";
-            if (Formatting.FromSpecification(styleName, specification, isCharacter).ValueOrCast(out var formatting, out Result<Unit> asUnit))
+            if (tableLines.Count > 0)
             {
-               styles[styleName] = formatting;
-            }
-            else
-            {
-               return asUnit;
-            }
-         }
-
-         return Unit.Success();
-      }
-
-      protected Maybe<ParagraphFormatting> getParagraphFormatting(string styleName)
-      {
-         return
-            from format in styles.Map(styleName)
-            from paragraphFormat in format.IfCast<ParagraphFormatting>()
-            select paragraphFormat;
-      }
-
-      protected Maybe<CharacterFormatting> getCharacterFormatting(string styleName)
-      {
-         return
-            from format in styles.Map(styleName)
-            from characterFormat in format.IfCast<CharacterFormatting>()
-            select characterFormat;
-      }
-
-      protected Matched<Content> parseContent()
-      {
-         var result = parseParagraph();
-         if (!result.IsNotMatched)
-         {
-            return result;
-         }
-
-         return parseTable();
-      }
-
-      protected Matched<Content> parseParagraph()
-      {
-         var items = new Items();
-         var styleName = string.Empty;
-         if (source.NextLineMatch(@"^>\s*(?:\[([\w-]+)\]\s*)?").If(out var result, out var line))
-         {
-            styleName = result.FirstGroup;
-            line = line.Drop(result.Length).TrimLeft();
-            items.ParagraphFormat = getParagraphFormatting(styleName);
-         }
-
-         if (line == "!")
-         {
-            items.Add(new Item("\n"));
-         }
-         else
-         {
-            foreach (var item in getItems(line, styleName))
-            {
-               items.Add(item);
+               var table = new Table(state, tableLines, widths);
+               generators.Add(table);
+               tableLines.Clear();
+               widths.Clear();
             }
          }
 
-         return items.Matched();
-      }
-
-      protected IEnumerable<Item> getItems(string line, string styleName)
-      {
-         if (line.Matches(@"^([^\[]*)").If(out var result))
+         void generateParagraph()
          {
-            var text = result.FirstGroup;
-            if (text.IsNotEmpty())
+            if (paragraphLines.Count > 0)
             {
-               yield return new Item(text) { CharacterFormatting = getCharacterFormatting(styleName) };
-
-               line = line.Drop(text.Length);
+               var paragraphText = paragraphLines.ToString(" ");
+               var paragraph = new Paragraph(paragraphText, _style);
+               generators.Add(paragraph);
+               paragraphLines.Clear();
+               _style = none<Style>();
             }
          }
 
-         foreach (var match in line.AllMatches(@"\[([\w-]+)\]([^\]]*)"))
+         while (source.NextLine().If(out var line))
          {
-            styleName = match.FirstGroup;
-            var text = match.SecondGroup;
-            var item = new Item(text) { CharacterFormatting = getCharacterFormatting(styleName) };
-            yield return item;
-         }
-      }
-
-      protected Matched<Content> parseTable()
-      {
-         var grid = new Grid();
-
-         while (source.NextLineMatch(@"^\|\s*").If(out var result, out var line))
-         {
-            line = line.Drop(result.Length);
-            var cells = line.Split(@"\s*\|\s*");
-            var gridLine = new GridLine();
-            foreach (var cell in cells)
+            if (line.Matches(PATTERN_STYLE_DEFINITION).If(out var result))
             {
-               var gridCell = new GridCell();
-               var items = new Items();
-               foreach (var item in getItems(cell, string.Empty))
+               var styleName = result.FirstGroup;
+               var specification = line.Drop(result.Length).Trim();
+               if (Style.FromSpecification(specification, true).ValueOrCast(out var style, out Result<RtfDocument> asDocument))
                {
-                  items.Add(item);
+                  state.Styles[styleName] = style;
                }
-
-               gridCell.Add(items);
-               gridLine.Add(gridCell);
+               else
+               {
+                  return asDocument;
+               }
             }
-
-            grid.Add(gridLine);
-         }
-
-         return grid.Matched();
-      }
-
-      protected Result<string> parse()
-      {
-         if (parseStyles().IfNot(out var exception))
-         {
-            return failure<string>(exception);
-         }
-
-         while (source.More)
-         {
-            if (parseContent().If(out var content, out var _exception))
+            else if (line.Matches(PATTERN_TABLE_WIDTHS).If(out result))
             {
-               contents.Add(content);
+               generateParagraph();
+               generateTable();
+
+               widths.AddRange(result.FirstGroup.Split(PATTERN_SPLIT_ON_COMMA).Select(s => s.ToFloat(1)));
             }
-            else if (_exception.If(out exception))
+            else if (line.Matches(PATTERN_TABLE_ROW).If(out result))
             {
-               return failure<string>(exception);
+               generateParagraph();
+
+               tableLines.Add(line.Drop(result.Length).Trim());
+            }
+            else if (line.IsMatch(PATTERN_LINE_BREAK))
+            {
+               generateParagraph();
+               generateTable();
+
+               generators.Add(Paragraph.Empty);
+            }
+            else if (line.Matches(PATTERN_STYLED_PARAGRAPH).If(out result))
+            {
+               generateParagraph();
+               generateTable();
+
+               var styleName = result.FirstGroup;
+               _style = state.Styles.Map(styleName);
+               paragraphLines.Add(line.Drop(result.Length).Trim());
+            }
+            else if (line.Matches(PATTERN_PARAGRAPH).If(out result))
+            {
+               generateParagraph();
+               generateTable();
+
+               paragraphLines.Add(line.Drop(result.Length).Trim());
             }
             else
             {
-               break;
+               paragraphLines.Add(line);
             }
          }
 
-         foreach (var (_, formatting) in styles)
+         generateParagraph();
+         generateTable();
+
+         foreach (var generator in generators)
          {
-            if (formatting.Style().ValueOrCast(out var style, out Result<string> asString))
-            {
-               documentCore.Styles.Add(style);
-            }
-            else
-            {
-               return asString;
-            }
+            generator.Generate(state);
          }
 
-         foreach (var content in contents)
-         {
-            content.Render(documentCore, section);
-         }
-
-         using var memoryStream = new MemoryStream();
-         documentCore.Save(memoryStream, SaveOptions.RtfDefault);
-         memoryStream.Position = 0;
-         using var reader = new StreamReader(memoryStream);
-
-         return reader.ReadToEnd().Success();
+         return state.Document.Success();
       }
-
-      public Result<string> Parse() => tryTo(parse);
    }
 }
