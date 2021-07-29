@@ -42,9 +42,6 @@
     <Reference Include="Core.WinForms">
       <HintPath>References\Core.WinForms.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetRtfWriter">
-      <HintPath>..\MergePalette\References\DotNetRtfWriter.dll</HintPath>
-    </Reference>
     <Reference Include="Markdig, Version=0.25.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Markdig.0.25.0\lib\net452\Markdig.dll</HintPath>
     </Reference>
