@@ -1,6 +1,6 @@
 ﻿using Core.Collections;
 using Core.Monads;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
@@ -11,7 +11,7 @@ namespace ReleasePalette.Content
       {
          Document = document;
          Styles = new StringHash<Style>(true);
-         Fonts = new AutoStringHash<FontDescriptor>(true, fontName => Document.createFont(fontName), true);
+         Fonts = new AutoStringHash<FontDescriptor>(true, fontName => Document.Font(fontName), true);
          ParagraphStash = none<RtfParagraph>();
       }
 

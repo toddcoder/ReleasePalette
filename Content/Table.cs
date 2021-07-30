@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Core.Matching;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 
 namespace ReleasePalette.Content
 {
@@ -51,7 +51,7 @@ namespace ReleasePalette.Content
 
       public override void Generate(State state)
       {
-         var table = state.Document.addTable(rows.Length, columnCount, 11);
+         var table = state.Document.Table(rows.Length, columnCount, 11);
          table.Margins[Direction.Left] = 20;
          table.Margins[Direction.Right] = 20;
 
@@ -62,10 +62,10 @@ namespace ReleasePalette.Content
             {
                if (column < widths.Length)
                {
-                  table.setColWidth(column, widths[column] * 72);
+                  table.SetColumnWidth(column, widths[column] * 72);
                }
 
-               var paragraph = table.cell(row, column).addParagraph();
+               var paragraph = table[row, column].Paragraph();
                var currentParagraph = currentRow[column];
                currentParagraph.Generate(state, paragraph);
             }

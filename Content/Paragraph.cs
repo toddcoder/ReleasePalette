@@ -2,7 +2,7 @@
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
@@ -41,9 +41,9 @@ namespace ReleasePalette.Content
 
       public override void Generate(State state)
       {
-         var paragraph = state.Document.addParagraph();
+         var paragraph = state.Document.Paragraph();
          Style.IfThen(style => style.ApplyTo(state, paragraph));
-         paragraph.setText(Text);
+         paragraph.Text = Text;
 
          state.ParagraphStash = paragraph.Some();
       }
@@ -51,7 +51,7 @@ namespace ReleasePalette.Content
       public override void Generate(State state, RtfParagraph paragraph)
       {
          Style.IfThen(style => style.ApplyTo(state, paragraph));
-         paragraph.setText(Text);
+         paragraph.Text = Text;
       }
    }
 }

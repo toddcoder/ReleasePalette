@@ -1,5 +1,5 @@
 ﻿using Core.Monads;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 
 namespace ReleasePalette.Content
 {
@@ -26,10 +26,10 @@ namespace ReleasePalette.Content
       {
          base.Generate(state, paragraph);
 
-         var format = paragraph.addCharFormat(0, Text.Length - 1);
-         format.LocalHyperlinkTip = Text;
-         format.LocalHyperlink = link;
-         format.FgColor = state.Document.createColor(new RtfColor(0, 0, 255));
+         var format = paragraph.CharFormat(0, Text.Length - 1);
+         format.LocalHyperlinkTip = Text.Some();
+         format.LocalHyperlink = link.Some();
+         format.ForegroundColor = state.Document.Color(new RtfColor(0, 0, 255)).Some();
       }
    }
 }

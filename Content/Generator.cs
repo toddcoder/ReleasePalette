@@ -1,4 +1,4 @@
-﻿using Elistia.DotNetRtfWriter;
+﻿using RtfWriter;
 
 namespace ReleasePalette.Content
 {

@@ -1,7 +1,7 @@
 ﻿using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 
 namespace ReleasePalette.Content
 {
@@ -79,16 +79,16 @@ namespace ReleasePalette.Content
 
       public void ApplyTo(State state, RtfParagraph paragraph)
       {
-         paragraph.DefaultCharFormat.Font = state.Fonts[FontName];
-         paragraph.DefaultCharFormat.FontSize = FontSize;
+         paragraph.DefaultCharFormat.Font = state.Fonts[FontName].Some();
+         paragraph.DefaultCharFormat.FontSize = FontSize.Some();
          if (Bold)
          {
-            paragraph.DefaultCharFormat.FontStyle.addStyle(FontStyleFlag.Bold);
+            paragraph.DefaultCharFormat.FontStyle.AddStyle(FontStyleFlag.Bold);
          }
 
          if (Italic)
          {
-            paragraph.DefaultCharFormat.FontStyle.addStyle(FontStyleFlag.Italic);
+            paragraph.DefaultCharFormat.FontStyle.AddStyle(FontStyleFlag.Italic);
          }
       }
    }

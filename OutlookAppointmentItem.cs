@@ -40,7 +40,7 @@ namespace ReleasePalette
          var mailContent = new MailContent();
          if (mailContent.Parse(body).If(out var document))
          {
-            var rtfBody = document.render();
+            var rtfBody = document.Render();
             var array = Encoding.ASCII.GetBytes(rtfBody);
             mailItem.RTFBody = array;
          }

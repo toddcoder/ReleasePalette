@@ -5,7 +5,7 @@ using Core.Enumerables;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using Elistia.DotNetRtfWriter;
+using RtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
