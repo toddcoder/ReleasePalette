@@ -29,6 +29,7 @@ namespace ReleasePalette
       protected StringHash<int> keyToIndexes;
       protected StringHash labelToKeys;
       protected StringHash<StringSet> keyToList;
+      protected StringHash<string[]> labelToTransformations;
 
       public ReleasePalette()
       {
@@ -96,7 +97,27 @@ namespace ReleasePalette
 
             if (text.IsNotEmpty())
             {
-               textValue.Text = Clipboard.GetText();
+               var _functions =
+                  from lineItem in getLineItem()
+                  from type in itemTypes.Map(lineItem.label)
+                  where type == ItemType.Transform
+                  from functionsFromLabel in labelToTransformations.Map(lineItem.label)
+                  select (functionsFromLabel, lineItem.label);
+               if (_functions.If(out var functions, out var label))
+               {
+                  var transformations = new Transformations(text);
+                  transformations.Transform(functions).OnSuccess(_ => showSuccess($"{label} transformed")).OnFailure(e => showException(e));
+                  if (transformations.Transform(functions).If(out text, out var exception))
+                  {
+                  }
+                  else
+                  {
+                     showException(exception);
+                     return;
+                  }
+               }
+
+               textValue.Text = text;
                apply();
                showSuccess($"Clipboard pasted to {labelName.Text}");
             }
@@ -118,6 +139,36 @@ namespace ReleasePalette
          {
             Clipboard.SetText(text);
             showSuccess($"Copied text from {labelName.Text} to clipboard");
+         }
+      }
+
+      protected void newData()
+      {
+         try
+         {
+            var dataHash = new StringHash(true);
+            foreach (var (key, _) in keyToIndexes)
+            {
+               dataHash[key] = string.Empty;
+            }
+
+            dataHash["release"] = configuration.Release;
+
+            if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
+            {
+               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               dataFile.Text = dataConfiguration.ToString();
+               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
+               loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
+            }
+            else
+            {
+               showException(exception);
+            }
+         }
+         catch (Exception exception)
+         {
+            showException(exception);
          }
       }
 
@@ -143,7 +194,6 @@ namespace ReleasePalette
                dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
                   .OnFailure(e => showException(e));
-               showSuccess("Data saved");
             }
             else
             {
@@ -218,7 +268,14 @@ namespace ReleasePalette
             var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
             if (!dataFile.Exists())
             {
-               saveData();
+               if (releaseDialog.IsNew)
+               {
+                  newData();
+               }
+               else
+               {
+                  saveData();
+               }
             }
 
             configuration.Save()
@@ -243,6 +300,8 @@ namespace ReleasePalette
             var index = 0;
             labelToKeys = new StringHash(true);
             keyToList = new StringHash<StringSet>(true);
+            labelToTransformations = new StringHash<string[]>(true);
+
             foreach (var (key, group) in mapConfiguration.Groups())
             {
                var _result =
@@ -256,15 +315,24 @@ namespace ReleasePalette
                   keyToIndexes[key] = index++;
                   labelToKeys[label] = key;
                   listViewItems.Items.Add(label);
-                  if (itemType == ItemType.List && group.GetValue("values").If(out var valuesSource))
+                  switch (itemType)
                   {
-                     var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
-                     if (valuesList.Length <= 1)
+                     case ItemType.List when group.GetValue("values").If(out var valuesSource):
                      {
-                        return "List types must have at least two items".Failure<Unit>();
-                     }
+                        var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
+                        if (valuesList.Length <= 1)
+                        {
+                           return "List types must have at least two items".Failure<Unit>();
+                        }
 
-                     keyToList[key] = new StringSet(true, valuesList);
+                        keyToList[key] = new StringSet(true, valuesList);
+                        break;
+                     }
+                     case ItemType.Transform:
+                     {
+                        labelToTransformations[label] = group.GetArray("functions");
+                        break;
+                     }
                   }
                }
             }
@@ -357,7 +425,16 @@ namespace ReleasePalette
       {
          if (listViewItems.SelectedItems.Count > 0)
          {
-            listViewItems.SelectedItems[0].SubItems[1].Text = textValue.Text;
+            var subItems = listViewItems.SelectedItems[0].SubItems;
+            if (subItems.Count == 1)
+            {
+               subItems.Add(textValue.Text);
+            }
+            else
+            {
+               subItems[1].Text = textValue.Text;
+            }
+
             saveData();
          }
       }
@@ -439,7 +516,8 @@ namespace ReleasePalette
          if (listViewItems.SelectedItems.Count > 0)
          {
             var item = listViewItems.SelectedItems[0];
-            return (item.SubItems[0].Text, item.SubItems[1].Text).Some();
+            var text = item.SubItems.Count >= 2 ? item.SubItems[1].Text : string.Empty;
+            return (item.SubItems[0].Text, text).Some();
          }
          else
          {
