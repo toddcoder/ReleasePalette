@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Core.Markup.Rtf;
 using Core.Matching;
-using RtfWriter;
 
 namespace ReleasePalette.Content
 {
@@ -9,14 +9,14 @@ namespace ReleasePalette.Content
    {
       public class Row
       {
-         protected Paragraph[] paragraphs;
+         protected DocumentParagraph[] paragraphs;
 
-         public Row(Paragraph[] paragraphs)
+         public Row(DocumentParagraph[] paragraphs)
          {
             this.paragraphs = paragraphs;
          }
 
-         public Paragraph this[int index] => paragraphs[index];
+         public DocumentParagraph this[int index] => paragraphs[index];
       }
 
       protected Row[] rows;
@@ -33,16 +33,16 @@ namespace ReleasePalette.Content
          rows = new Row[rowCount];
          for (var row = 0; row < rowCount; row++)
          {
-            var paragraphs = new Paragraph[columnCount];
+            var paragraphs = new DocumentParagraph[columnCount];
             var dataRow = data[row];
             for (var column = 0; column < dataRow.Length; column++)
             {
-               paragraphs[column] = Paragraph.FromText(dataRow[column], state);
+               paragraphs[column] = DocumentParagraph.FromText(dataRow[column], state);
             }
 
             for (var column = dataRow.Length; column < columnCount; column++)
             {
-               paragraphs[column] = Paragraph.Empty;
+               paragraphs[column] = DocumentParagraph.Empty;
             }
 
             rows[row] = new Row(paragraphs);
@@ -72,7 +72,7 @@ namespace ReleasePalette.Content
          }
       }
 
-      public override void Generate(State state, RtfParagraph paragraph)
+      public override void Generate(State state, Paragraph paragraph)
       {
       }
    }

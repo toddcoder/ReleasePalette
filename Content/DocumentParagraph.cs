@@ -2,14 +2,13 @@
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using RtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
 {
-   public class Paragraph : Generator
+   public class DocumentParagraph : Generator
    {
-      public static Paragraph FromText(string line, State state)
+      public static DocumentParagraph FromText(string line, State state)
       {
          var _styleAndLength =
             from result in line.Matches(@"^\[([\w-]+)\]")
@@ -23,13 +22,13 @@ namespace ReleasePalette.Content
          }
          else
          {
-            return new Paragraph(line, _styleAndLength.Map(t => t.style));
+            return new DocumentParagraph(line, _styleAndLength.Map(t => t.style));
          }
       }
 
-      public static Paragraph Empty => new(string.Empty, none<Style>());
+      public static DocumentParagraph Empty => new(string.Empty, none<Style>());
 
-      public Paragraph(string text, Maybe<Style> _style)
+      public DocumentParagraph(string text, Maybe<Style> _style)
       {
          Text = text;
          Style = _style;
@@ -45,10 +44,10 @@ namespace ReleasePalette.Content
          Style.IfThen(style => style.ApplyTo(state, paragraph));
          paragraph.Text = Text;
 
-         state.ParagraphStash = paragraph.Some();
+         state.ParagraphStash = paragraph;
       }
 
-      public override void Generate(State state, RtfParagraph paragraph)
+      public override void Generate(State state, Core.Markup.Rtf.Paragraph paragraph)
       {
          Style.IfThen(style => style.ApplyTo(state, paragraph));
          paragraph.Text = Text;

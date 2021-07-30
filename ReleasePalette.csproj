@@ -39,6 +39,9 @@
     <Reference Include="Core">
       <HintPath>References\Core.dll</HintPath>
     </Reference>
+    <Reference Include="Core.Markup">
+      <HintPath>..\MergePalette\References\Core.Markup.dll</HintPath>
+    </Reference>
     <Reference Include="Core.WinForms">
       <HintPath>References\Core.WinForms.dll</HintPath>
     </Reference>
@@ -48,9 +51,6 @@
     <Reference Include="Microsoft.Office.Interop.Outlook, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Office.Interop.Outlook.15.0.4797.1003\lib\net20\Microsoft.Office.Interop.Outlook.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="RtfWriter">
-      <HintPath>References\RtfWriter.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -83,7 +83,7 @@
     <Compile Include="Content\Generator.cs" />
     <Compile Include="Content\Hyperlink.cs" />
     <Compile Include="Content\MailContent.cs" />
-    <Compile Include="Content\Paragraph.cs" />
+    <Compile Include="Content\DocumentParagraph.cs" />
     <Compile Include="Content\State.cs" />
     <Compile Include="Content\Style.cs" />
     <Compile Include="Content\Table.cs" />
