@@ -142,6 +142,36 @@ namespace ReleasePalette
          }
       }
 
+      protected void newData()
+      {
+         try
+         {
+            var dataHash = new StringHash(true);
+            foreach (var (key, _) in keyToIndexes)
+            {
+               dataHash[key] = string.Empty;
+            }
+
+            dataHash["release"] = configuration.Release;
+
+            if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
+            {
+               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               dataFile.Text = dataConfiguration.ToString();
+               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
+               loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
+            }
+            else
+            {
+               showException(exception);
+            }
+         }
+         catch (Exception exception)
+         {
+            showException(exception);
+         }
+      }
+
       protected void saveData()
       {
          try
@@ -164,7 +194,6 @@ namespace ReleasePalette
                dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
                   .OnFailure(e => showException(e));
-               showSuccess("Data saved");
             }
             else
             {
@@ -239,7 +268,14 @@ namespace ReleasePalette
             var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
             if (!dataFile.Exists())
             {
-               saveData();
+               if (releaseDialog.IsNew)
+               {
+                  newData();
+               }
+               else
+               {
+                  saveData();
+               }
             }
 
             configuration.Save()

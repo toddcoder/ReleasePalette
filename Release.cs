@@ -23,8 +23,12 @@ namespace ReleasePalette
 
       protected bool isValid(string release) => release.IsMatch(ReleaseValidPattern);
 
+      public bool IsNew { get; set; }
+
       protected void Release_Load(object sender, EventArgs e)
       {
+         IsNew = false;
+
          if (ReleaseValue.IsNotEmpty() && isValid(ReleaseValue))
          {
             textRelease.Text = ReleaseValue;
@@ -69,6 +73,8 @@ namespace ReleasePalette
          {
             ReleaseValue = textRelease.Text;
          }
+
+         IsNew = !(DataFolder + $"{ReleaseValue}.configuration").Exists() && DialogResult == DialogResult.OK;
       }
 
       protected void listReleases_SelectedIndexChanged(object sender, EventArgs e)
