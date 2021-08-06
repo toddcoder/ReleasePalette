@@ -1,9 +1,9 @@
-﻿using Core.Monads;
-using RtfWriter;
+﻿using Core.Markup.Rtf;
+using Core.Monads;
 
 namespace ReleasePalette.Content
 {
-   public class Hyperlink : Paragraph
+   public class Hyperlink : DocumentParagraph
    {
       protected string link;
 
@@ -22,14 +22,14 @@ namespace ReleasePalette.Content
          }
       }
 
-      public override void Generate(State state, RtfParagraph paragraph)
+      public override void Generate(State state, Paragraph paragraph)
       {
          base.Generate(state, paragraph);
 
          var format = paragraph.CharFormat(0, Text.Length - 1);
-         format.LocalHyperlinkTip = Text.Some();
-         format.LocalHyperlink = link.Some();
-         format.ForegroundColor = state.Document.Color(new RtfColor(0, 0, 255)).Some();
+         format.LocalHyperlinkTip = Text;
+         format.LocalHyperlink = link;
+         format.ForegroundColor = state.Document.Color(0, 0, 255);
       }
    }
 }

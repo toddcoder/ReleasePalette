@@ -1,7 +1,7 @@
-﻿using Core.Matching;
+﻿using Core.Markup.Rtf;
+using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using RtfWriter;
 
 namespace ReleasePalette.Content
 {
@@ -77,18 +77,18 @@ namespace ReleasePalette.Content
 
       public Alignment Alignment { get; set; }
 
-      public void ApplyTo(State state, RtfParagraph paragraph)
+      public void ApplyTo(State state, Paragraph paragraph)
       {
-         paragraph.DefaultCharFormat.Font = state.Fonts[FontName].Some();
-         paragraph.DefaultCharFormat.FontSize = FontSize.Some();
+         paragraph.DefaultCharFormat.Font = state.Fonts[FontName];
+         paragraph.DefaultCharFormat.FontSize = FontSize;
          if (Bold)
          {
-            paragraph.DefaultCharFormat.FontStyle.AddStyle(FontStyleFlag.Bold);
+            paragraph.DefaultCharFormat.FontStyle += FontStyleFlag.Bold;
          }
 
          if (Italic)
          {
-            paragraph.DefaultCharFormat.FontStyle.AddStyle(FontStyleFlag.Italic);
+            paragraph.DefaultCharFormat.FontStyle += FontStyleFlag.Italic;
          }
       }
    }

@@ -61,6 +61,7 @@ namespace ReleasePalette
 
             menus.Menu("Tools");
             menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
+            menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "^A");
 
             menus.Menu("Releases");
             menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
@@ -509,6 +510,16 @@ namespace ReleasePalette
       {
          using var compare = new Compare();
          compare.ShowDialog();
+      }
+
+      protected void showAbandonPullRequestsDialog()
+      {
+         if (getTextItem("masterPr").If(out var masterPullRequestUrl) && masterPullRequestUrl.Matches(@"(\d+)(?:\?_a=\w+)?$").If(out var result))
+         {
+            var pullRequestId = result.FirstGroup;
+            using var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
+            abandon.ShowDialog();
+         }
       }
 
       protected Maybe<(string label, string text)> getLineItem()

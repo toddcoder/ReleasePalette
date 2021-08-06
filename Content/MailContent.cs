@@ -2,10 +2,10 @@
 using System.Linq;
 using Core.Collections;
 using Core.Enumerables;
+using Core.Markup.Rtf;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
-using RtfWriter;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
@@ -24,11 +24,11 @@ namespace ReleasePalette.Content
 
       public MailContent()
       {
-         var document = new RtfDocument(PaperSize.Letter, PaperOrientation.Portrait, Lcid.English);
+         var document = new Document(PaperSize.Letter, PaperOrientation.Portrait, Lcid.English);
          state = new State(document);
       }
 
-      public Result<RtfDocument> Parse(string text)
+      public Result<Document> Parse(string text)
       {
          var source = new Source(text);
          var tableLines = new List<string>();
@@ -53,7 +53,7 @@ namespace ReleasePalette.Content
             if (paragraphLines.Count > 0)
             {
                var paragraphText = paragraphLines.ToString(" ");
-               var paragraph = new Paragraph(paragraphText, _style);
+               var paragraph = new DocumentParagraph(paragraphText, _style);
                generators.Add(paragraph);
                paragraphLines.Clear();
                _style = none<Style>();
@@ -66,7 +66,7 @@ namespace ReleasePalette.Content
             {
                var styleName = result.FirstGroup;
                var specification = line.Drop(result.Length).Trim();
-               if (Style.FromSpecification(specification, true).ValueOrCast(out var style, out Result<RtfDocument> asDocument))
+               if (Style.FromSpecification(specification, true).ValueOrCast(out var style, out Result<Document> asDocument))
                {
                   state.Styles[styleName] = style;
                }
@@ -93,7 +93,7 @@ namespace ReleasePalette.Content
                generateParagraph();
                generateTable();
 
-               generators.Add(Paragraph.Empty);
+               generators.Add(DocumentParagraph.Empty);
             }
             else if (line.Matches(PATTERN_STYLED_PARAGRAPH).If(out result))
             {

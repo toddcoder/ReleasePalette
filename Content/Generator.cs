@@ -1,4 +1,5 @@
-﻿using RtfWriter;
+﻿
+using Core.Markup.Rtf;
 
 namespace ReleasePalette.Content
 {
@@ -6,6 +7,6 @@ namespace ReleasePalette.Content
    {
       public abstract void Generate(State state);
 
-      public abstract void Generate(State state, RtfParagraph paragraph);
+      public abstract void Generate(State state, Paragraph paragraph);
    }
 }
