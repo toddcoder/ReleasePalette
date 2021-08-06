@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Core.Collections;
-using Core.Enumerables;
 using Core.Monads;
 using Tfs.Library;
-using Core.Matching;
 using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
@@ -242,7 +239,7 @@ namespace ReleasePalette
          foreach (var (fullPath, pullRequest) in selectedPullRequests)
          {
             var _foundNode = findNodeByPath(fullPath);
-            var _text = none<string>();
+            Maybe<string> _text;
             if (pullRequest.Abandon().If(out _, out var exception))
             {
                _text = $"PR {pullRequest.PullRequestId} abandoned";
