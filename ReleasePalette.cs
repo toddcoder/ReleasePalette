@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
+using Core.Assertions;
 using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
@@ -60,8 +61,8 @@ namespace ReleasePalette
             menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
             menus.Menu("Tools");
-            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
-            menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "^A");
+            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "F2");
+            menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "F3");
 
             menus.Menu("Releases");
             menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
@@ -506,17 +507,34 @@ namespace ReleasePalette
 
       protected void buttonOpen_Click(object sender, EventArgs e) => open();
 
+      protected Maybe<string> pullRequestIdFromUrl(string url)
+      {
+         return url.Matches(@"(\d+)(?:\?_a=\w+)?$").Map(result => result.FirstGroup);
+      }
+
       protected void showCompareDialog()
       {
-         using var compare = new Compare();
-         compare.ShowDialog();
+         var _result =
+            from pullRequestUrl in getTextItem("masterPr").Result("Master PR url not found")
+            from extractedPullRequestId in pullRequestIdFromUrl(pullRequestUrl).Result("Couldn't determine PR id from URL")
+            from releaseDateItem in getTextItem("releaseDate").Result("Couldn't get release date")
+            from releaseDateAssertion in releaseDateItem.Must().Not.BeNullOrEmpty().OrFailure("Release date can't be empty")
+            select (extractedPullRequestId, releaseDateItem);
+         if (_result.If(out var pullRequestId, out var releaseDate, out var exception))
+         {
+            using var addWorkItems = new AddWorkItems { PullRequestId = pullRequestId, TargetDate = releaseDate };
+            addWorkItems.ShowDialog();
+         }
+         else
+         {
+            showException(exception);
+         }
       }
 
       protected void showAbandonPullRequestsDialog()
       {
-         if (getTextItem("masterPr").If(out var masterPullRequestUrl) && masterPullRequestUrl.Matches(@"(\d+)(?:\?_a=\w+)?$").If(out var result))
+         if (getTextItem("masterPr").If(out var masterPullRequestUrl) && pullRequestIdFromUrl(masterPullRequestUrl).If(out var pullRequestId))
          {
-            var pullRequestId = result.FirstGroup;
             using var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
             abandon.ShowDialog();
          }

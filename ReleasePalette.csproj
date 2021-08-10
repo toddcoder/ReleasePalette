@@ -90,6 +90,12 @@
     <Compile Include="AbandonPullRequests.Designer.cs">
       <DependentUpon>AbandonPullRequests.cs</DependentUpon>
     </Compile>
+    <Compile Include="AddWorkItems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddWorkItems.Designer.cs">
+      <DependentUpon>AddWorkItems.cs</DependentUpon>
+    </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
     <Compile Include="Content\Alignment.cs" />
@@ -133,6 +139,9 @@
     <Compile Include="Transformations.cs" />
     <EmbeddedResource Include="AbandonPullRequests.resx">
       <DependentUpon>AbandonPullRequests.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AddWorkItems.resx">
+      <DependentUpon>AddWorkItems.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Compare.resx">
       <DependentUpon>Compare.cs</DependentUpon>
