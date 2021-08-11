@@ -27,6 +27,8 @@ namespace ReleasePalette
 
       public string PullRequestId { get; set; }
 
+      public string ReleaseBranch { get; set; }
+
       public string TargetDate
       {
          get => targetDate;
@@ -55,10 +57,17 @@ namespace ReleasePalette
 
          try
          {
+            var query = new WorkItemQuery(http)
+            {
+               Filter = $"[Estream.ProdSupp.MergeStatus] = 'Merged' and [Estream.ProdSupp.MergedTo] CONTAINS '{ReleaseBranch}'"
+            };
+            var mergedWorkItems = query.WorkItems().ToArray();
+            loadListView(mergedWorkItems, listViewExisting);
+
             var pullRequest = new PullRequest(PullRequestId, http);
             pullRequest.Get().Force();
 
-            var workItems = pullRequest.WorkItems().Where(i => i.TargetDate.StartsWith(targetDate)).OrderBy(i => i.Id).ToArray();
+            var workItems = pullRequest.WorkItems().ToArray();
             loadListView(workItems, listViewExisting);
             existingWorkItemIds.AddRange(workItems.Select(i => i.Id));
          }
