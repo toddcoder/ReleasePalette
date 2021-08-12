@@ -58,7 +58,7 @@ namespace ReleasePalette
          this.treeViewPullRequests.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.treeViewPullRequests.Location = new System.Drawing.Point(12, 32);
          this.treeViewPullRequests.Name = "treeViewPullRequests";
-         this.treeViewPullRequests.Size = new System.Drawing.Size(858, 395);
+         this.treeViewPullRequests.Size = new System.Drawing.Size(870, 401);
          this.treeViewPullRequests.TabIndex = 3;
          this.treeViewPullRequests.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.treeViewPullRequests_AfterCheck);
          // 
@@ -66,17 +66,18 @@ namespace ReleasePalette
          // 
          this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonClose.Location = new System.Drawing.Point(795, 434);
+         this.buttonClose.Location = new System.Drawing.Point(807, 440);
          this.buttonClose.Name = "buttonClose";
          this.buttonClose.Size = new System.Drawing.Size(75, 23);
          this.buttonClose.TabIndex = 5;
          this.buttonClose.Text = "Close";
          this.buttonClose.UseVisualStyleBackColor = true;
+         this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
          // 
          // buttonAbandon
          // 
          this.buttonAbandon.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonAbandon.Location = new System.Drawing.Point(12, 434);
+         this.buttonAbandon.Location = new System.Drawing.Point(12, 440);
          this.buttonAbandon.Name = "buttonAbandon";
          this.buttonAbandon.Size = new System.Drawing.Size(75, 23);
          this.buttonAbandon.TabIndex = 4;
@@ -88,16 +89,16 @@ namespace ReleasePalette
          // 
          this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.progressBar.Location = new System.Drawing.Point(93, 434);
+         this.progressBar.Location = new System.Drawing.Point(93, 440);
          this.progressBar.Name = "progressBar";
-         this.progressBar.Size = new System.Drawing.Size(696, 23);
+         this.progressBar.Size = new System.Drawing.Size(708, 23);
          this.progressBar.TabIndex = 4;
          this.progressBar.Visible = false;
          // 
          // buttonSelectAll
          // 
          this.buttonSelectAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonSelectAll.Location = new System.Drawing.Point(555, 6);
+         this.buttonSelectAll.Location = new System.Drawing.Point(567, 6);
          this.buttonSelectAll.Name = "buttonSelectAll";
          this.buttonSelectAll.Size = new System.Drawing.Size(101, 23);
          this.buttonSelectAll.TabIndex = 0;
@@ -108,7 +109,7 @@ namespace ReleasePalette
          // buttonUnselectAll
          // 
          this.buttonUnselectAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonUnselectAll.Location = new System.Drawing.Point(662, 6);
+         this.buttonUnselectAll.Location = new System.Drawing.Point(674, 6);
          this.buttonUnselectAll.Name = "buttonUnselectAll";
          this.buttonUnselectAll.Size = new System.Drawing.Size(101, 23);
          this.buttonUnselectAll.TabIndex = 1;
@@ -119,7 +120,7 @@ namespace ReleasePalette
          // buttonInvertSelection
          // 
          this.buttonInvertSelection.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonInvertSelection.Location = new System.Drawing.Point(769, 6);
+         this.buttonInvertSelection.Location = new System.Drawing.Point(781, 6);
          this.buttonInvertSelection.Name = "buttonInvertSelection";
          this.buttonInvertSelection.Size = new System.Drawing.Size(101, 23);
          this.buttonInvertSelection.TabIndex = 2;
@@ -131,7 +132,7 @@ namespace ReleasePalette
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(882, 468);
+         this.ClientSize = new System.Drawing.Size(894, 474);
          this.Controls.Add(this.buttonInvertSelection);
          this.Controls.Add(this.buttonUnselectAll);
          this.Controls.Add(this.buttonSelectAll);
@@ -140,11 +141,8 @@ namespace ReleasePalette
          this.Controls.Add(this.buttonClose);
          this.Controls.Add(this.treeViewPullRequests);
          this.Controls.Add(this.labelPullRequestId);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-         this.MaximizeBox = false;
-         this.MinimizeBox = false;
          this.Name = "AbandonPullRequests";
-         this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+         this.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultBounds;
          this.Text = "Abandon Pull Requests";
          this.Load += new System.EventHandler(this.AbandonPullRequests_Load);
          this.ResumeLayout(false);
