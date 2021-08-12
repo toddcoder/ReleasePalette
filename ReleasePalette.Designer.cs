@@ -144,6 +144,7 @@ namespace ReleasePalette
          // 
          this.labelMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelMessage.AutoEllipsis = true;
          this.labelMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelMessage.Location = new System.Drawing.Point(9, 160);
          this.labelMessage.Name = "labelMessage";

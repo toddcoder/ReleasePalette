@@ -25,7 +25,7 @@ namespace ReleasePalette
       {
          return
             from to in configuration.GetValue("to").Result("'To' is required")
-            from cc in configuration.GetValue("cc").DefaultTo(() => string.Empty).Success()
+            from cc in configuration.GetValue("cc").DefaultTo(() => "").Success()
             from subject in configuration.GetValue("subject").Result("'Subject' is required")
             from body in configuration.GetValue("body").Result("'Body' is required")
             select new OutlookArguments(to, cc, subject, body, personal);

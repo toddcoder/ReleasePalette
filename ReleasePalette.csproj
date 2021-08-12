@@ -90,8 +90,15 @@
     <Compile Include="AbandonPullRequests.Designer.cs">
       <DependentUpon>AbandonPullRequests.cs</DependentUpon>
     </Compile>
+    <Compile Include="AddWorkItems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddWorkItems.Designer.cs">
+      <DependentUpon>AddWorkItems.cs</DependentUpon>
+    </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Content\Alignment.cs" />
     <Compile Include="Content\Generator.cs" />
     <Compile Include="Content\Hyperlink.cs" />
@@ -111,9 +118,16 @@
     <Compile Include="IOutlookItem.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="ItemType.cs" />
+    <Compile Include="MissingWorkItems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MissingWorkItems.Designer.cs">
+      <DependentUpon>MissingWorkItems.cs</DependentUpon>
+    </Compile>
     <Compile Include="OutlookAppointmentItem.cs" />
     <Compile Include="OutlookArguments.cs" />
     <Compile Include="OutlookMailItem.cs" />
+    <Compile Include="OwnedStatus.cs" />
     <Compile Include="Personal.cs" />
     <Compile Include="Release.cs">
       <SubType>Form</SubType>
@@ -131,11 +145,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleasePaletteConfiguration.cs" />
     <Compile Include="Transformations.cs" />
+    <Compile Include="OwnedWorkItem.cs" />
     <EmbeddedResource Include="AbandonPullRequests.resx">
       <DependentUpon>AbandonPullRequests.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AddWorkItems.resx">
+      <DependentUpon>AddWorkItems.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Compare.resx">
       <DependentUpon>Compare.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MissingWorkItems.resx">
+      <DependentUpon>MissingWorkItems.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

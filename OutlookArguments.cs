@@ -36,6 +36,7 @@ namespace ReleasePalette
          }
          else
          {
+            replacements["pullRequestTitle1"] = string.Empty;
             replacements["pullRequestTitle2"] = pullRequestTitle;
          }
 

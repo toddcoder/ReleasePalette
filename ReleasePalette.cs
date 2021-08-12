@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
+using Core.Assertions;
 using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
@@ -51,7 +52,7 @@ namespace ReleasePalette
          {
             showSuccess("Configurations loaded");
 
-            menus = new FreeMenus { Form = this.Some<Form>() };
+            menus = new FreeMenus { Form = this };
 
             menus.Menu("Commands");
             menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
@@ -60,8 +61,8 @@ namespace ReleasePalette
             menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
             menus.Menu("Tools");
-            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "^K");
-            menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "^A");
+            menus.Menu("Tools", "Missing Work Items", (_, _) => showMissingWorkItemsDialog(), "F2");
+            menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "F3");
 
             menus.Menu("Releases");
             menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
@@ -88,6 +89,11 @@ namespace ReleasePalette
          {
             showException(exception);
          }
+      }
+
+      protected bool askYesNo(string message)
+      {
+         return MessageBox.Show(message, "Continue", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
       protected void pasteFromClipboard()
@@ -118,9 +124,12 @@ namespace ReleasePalette
                   }
                }
 
-               textValue.Text = text;
-               apply();
-               showSuccess($"Clipboard pasted to {labelName.Text}");
+               if (textValue.TextLength == 0 || askYesNo($"Overwrite {label}?"))
+               {
+                  textValue.Text = text;
+                  apply();
+                  showSuccess($"Clipboard pasted to {labelName.Text}");
+               }
             }
             else
             {
@@ -402,7 +411,7 @@ namespace ReleasePalette
                {
                   if (itemType == ItemType.Url && value.IsNotEmpty())
                   {
-                     showMessage($"Opening {value.Truncate(40)}");
+                     showMessage($"Opening {value}");
                      webBrowser.Navigate(value);
                   }
                   else
@@ -459,7 +468,7 @@ namespace ReleasePalette
          if (e.Data.GetDataPresent(typeof(string)))
          {
             var value = (string)e.Data.GetData(typeof(string));
-            selectedIndexAction(value.Some());
+            selectedIndexAction(value);
          }
       }
 
@@ -471,7 +480,7 @@ namespace ReleasePalette
          }
 
          var url = e.Url.AbsoluteUri;
-         showSuccess($"Navigated to {url.Truncate(40)}");
+         showSuccess($"Navigated to {url}");
       }
 
       protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e)
@@ -506,19 +515,63 @@ namespace ReleasePalette
 
       protected void buttonOpen_Click(object sender, EventArgs e) => open();
 
+      protected Maybe<string> pullRequestIdFromUrl(string url)
+      {
+         return url.Matches(@"(\d+)(?:\?_a=\w+)?$").Map(result => result.FirstGroup);
+      }
+
       protected void showCompareDialog()
       {
-         using var compare = new Compare();
-         compare.ShowDialog();
+         var _result =
+            from pullRequestUrl in getTextItem("masterPr").Result("Master PR url not found")
+            from extractedPullRequestId in pullRequestIdFromUrl(pullRequestUrl).Result("Couldn't determine PR id from URL")
+            from releaseDateItem in getTextItem("releaseDate").Result("Couldn't get release date")
+            from releaseDateAssertion in releaseDateItem.Must().Not.BeNullOrEmpty().OrFailure("Release date can't be empty")
+            select (extractedPullRequestId, releaseDateItem);
+         if (_result.If(out var pullRequestId, out var releaseDate, out var exception))
+         {
+            using var addWorkItems = new AddWorkItems { PullRequestId = pullRequestId, TargetDate = releaseDate };
+            addWorkItems.ShowDialog();
+         }
+         else
+         {
+            showException(exception);
+         }
+      }
+
+      protected Maybe<string> getPullRequestId()
+      {
+         return
+            from masterPullRequestUrl in getTextItem("masterPr")
+            from pullRequestId in pullRequestIdFromUrl(masterPullRequestUrl)
+            select pullRequestId;
+      }
+
+      protected Maybe<string> getReleaseBranch() => getTextItem("release");
+
+      protected Maybe<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
+      {
+         return
+            from pullRequestId in getPullRequestId()
+            from releaseBranch in getReleaseBranch()
+            select (pullRequestId, releaseBranch);
+      }
+
+      protected void showMissingWorkItemsDialog()
+      {
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch))
+         {
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
+            missingWorkItems.Show();
+         }
       }
 
       protected void showAbandonPullRequestsDialog()
       {
-         if (getTextItem("masterPr").If(out var masterPullRequestUrl) && masterPullRequestUrl.Matches(@"(\d+)(?:\?_a=\w+)?$").If(out var result))
+         if (getPullRequestId().If(out var pullRequestId))
          {
-            var pullRequestId = result.FirstGroup;
-            using var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
-            abandon.ShowDialog();
+            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
+            abandon.Show();
          }
       }
 
@@ -528,7 +581,7 @@ namespace ReleasePalette
          {
             var item = listViewItems.SelectedItems[0];
             var text = item.SubItems.Count >= 2 ? item.SubItems[1].Text : string.Empty;
-            return (item.SubItems[0].Text, text).Some();
+            return (item.SubItems[0].Text, text);
          }
          else
          {
@@ -541,7 +594,7 @@ namespace ReleasePalette
          if (keyToIndexes.Map(key).If(out var index))
          {
             var item = listViewItems.Items[index];
-            return item.SubItems[1].Text.Some();
+            return item.SubItems[1].Text;
          }
          else
          {

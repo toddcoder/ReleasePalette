@@ -11,7 +11,6 @@ namespace ReleasePalette
 {
    public partial class AbandonPullRequests : Form
    {
-      protected Http http;
       protected StringHash<PullRequest> pullRequests;
       protected StringSet workItemPaths;
       protected CheckingStatus checkingStatus;
@@ -21,7 +20,6 @@ namespace ReleasePalette
          InitializeComponent();
 
          PullRequestId = string.Empty;
-         http = new Http { Base = "tfs", Organization = "LS", Project = "Estream" };
          pullRequests = new StringHash<PullRequest>(true);
          workItemPaths = new StringSet(true);
          checkingStatus = CheckingStatus.None;
@@ -45,17 +43,20 @@ namespace ReleasePalette
             treeViewPullRequests.Nodes.Clear();
             pullRequests.Clear();
 
-            var pullRequest = new PullRequest(PullRequestId, http);
+            var pullRequest = new PullRequest(PullRequestId, Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT);
             pullRequest.Get().Force();
 
             var workItems = pullRequest.WorkItems().ToArray();
             progressBar.Minimum = 1;
             progressBar.Maximum = workItems.Length;
+            progressBar.Step = 1;
             progressBar.Visible = true;
 
             foreach (var workItem in pullRequest.WorkItems())
             {
-               var activePullRequests = workItem.PullRequests().Where(pr => pr.Status == "active").ToArray();
+               var activePullRequests = workItem.PullRequests()
+                  .Where(pr => pr.PullRequestId != PullRequestId && pr.Status != "completed" && pr.Status != "abandoned")
+                  .ToArray();
 
                if (activePullRequests.Length > 0)
                {
@@ -64,7 +65,8 @@ namespace ReleasePalette
 
                   foreach (var activePullRequest in activePullRequests)
                   {
-                     var key = workItemNode.Nodes.Add($"{activePullRequest.PullRequestId} {activePullRequest.Title}").FullPath;
+                     var text = $"{activePullRequest.PullRequestId} {activePullRequest.Title} | {activePullRequest.Status}";
+                     var key = workItemNode.Nodes.Add(text).FullPath;
                      pullRequests[key] = activePullRequest;
                   }
 
@@ -260,5 +262,7 @@ namespace ReleasePalette
 
          progressBar.Visible = false;
       }
+
+      protected void buttonClose_Click(object sender, EventArgs e) => Close();
    }
 }
