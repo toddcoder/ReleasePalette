@@ -52,7 +52,7 @@ namespace ReleasePalette
          {
             showSuccess("Configurations loaded");
 
-            menus = new FreeMenus { Form = this.Some<Form>() };
+            menus = new FreeMenus { Form = this };
 
             menus.Menu("Commands");
             menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
@@ -468,7 +468,7 @@ namespace ReleasePalette
          if (e.Data.GetDataPresent(typeof(string)))
          {
             var value = (string)e.Data.GetData(typeof(string));
-            selectedIndexAction(value.Some());
+            selectedIndexAction(value);
          }
       }
 
@@ -581,7 +581,7 @@ namespace ReleasePalette
          {
             var item = listViewItems.SelectedItems[0];
             var text = item.SubItems.Count >= 2 ? item.SubItems[1].Text : string.Empty;
-            return (item.SubItems[0].Text, text).Some();
+            return (item.SubItems[0].Text, text);
          }
          else
          {
@@ -594,7 +594,7 @@ namespace ReleasePalette
          if (keyToIndexes.Map(key).If(out var index))
          {
             var item = listViewItems.Items[index];
-            return item.SubItems[1].Text.Some();
+            return item.SubItems[1].Text;
          }
          else
          {

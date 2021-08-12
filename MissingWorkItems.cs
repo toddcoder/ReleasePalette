@@ -25,41 +25,43 @@ namespace ReleasePalette
 
       protected IEnumerable<WorkItem> getExistingWorkItems()
       {
-         try
-         {
-            var pullRequest = new PullRequest(PullRequestId, Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT);
-            pullRequest.Get().Force();
+         var pullRequest = new PullRequest(PullRequestId, Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT);
+         pullRequest.Get().Force();
 
-            return pullRequest.WorkItems();
-         }
-         catch (Exception exception)
+         foreach (var workItem in pullRequest.WorkItems())
          {
-            labelStatus.Text = exception.Message;
-            return Enumerable.Empty<WorkItem>();
+            yield return workItem;
+
+            Application.DoEvents();
          }
       }
 
       protected IEnumerable<WorkItem> getMissingWorkItems()
       {
-         try
+         var query = new WorkItemQuery(Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT)
          {
-            var query = new WorkItemQuery(Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT)
-            {
-               Filter = $"[Estream.ProdSupp.MergeStatus] = 'Merged' AND [Estream.ProdSupp.MergedTo] CONTAINS '{ReleaseBranch}'"
-            };
-            return query.WorkItems();
-         }
-         catch (Exception exception)
+            Filter = $"[Estream.ProdSupp.MergeStatus] = 'Merged' AND [Estream.ProdSupp.MergedTo] CONTAINS '{ReleaseBranch}'"
+         };
+         foreach (var workItem in query.WorkItems())
          {
-            labelStatus.Text = exception.Message;
-            return Enumerable.Empty<WorkItem>();
+            yield return workItem;
+
+            Application.DoEvents();
          }
       }
 
-      protected void loadViews()
+      protected void loadViews(bool show)
       {
+         if (show)
+         {
+            Show();
+         }
+
          try
          {
+            webProgress.Visible = true;
+            Application.DoEvents();
+
             var existing = getExistingWorkItems().ToSet();
             var existingIds = existing.Select(i => i.Id).ToStringSet(true);
             var missing = getMissingWorkItems().ToSet();
@@ -96,6 +98,7 @@ namespace ReleasePalette
          {
             viewExisting.EndUpdate();
             viewMissing.EndUpdate();
+            webProgress.Visible = false;
          }
       }
 
@@ -103,7 +106,7 @@ namespace ReleasePalette
       {
          labelPullRequestId.Text = $"Pull Request {PullRequestId}";
 
-         loadViews();
+         loadViews(true);
       }
 
       protected void buttonAdd_Click(object sender, EventArgs e)
@@ -123,7 +126,7 @@ namespace ReleasePalette
                }
             }
 
-            loadViews();
+            loadViews(false);
          }
          catch (Exception exception)
          {

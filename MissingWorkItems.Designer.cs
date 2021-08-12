@@ -35,13 +35,14 @@ namespace ReleasePalette
          this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.labelPullRequestId = new System.Windows.Forms.Label();
          this.panelBottom = new System.Windows.Forms.Panel();
+         this.webProgress = new Core.WinForms.Controls.WebProgress();
+         this.labelStatus = new System.Windows.Forms.Label();
          this.buttonClose = new System.Windows.Forms.Button();
          this.buttonAdd = new System.Windows.Forms.Button();
          this.viewExisting = new System.Windows.Forms.ListView();
          this.columnId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnOwned = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.labelStatus = new System.Windows.Forms.Label();
          this.tableLayoutPanel.SuspendLayout();
          this.panelBottom.SuspendLayout();
          this.SuspendLayout();
@@ -106,6 +107,7 @@ namespace ReleasePalette
          // panelBottom
          // 
          this.tableLayoutPanel.SetColumnSpan(this.panelBottom, 2);
+         this.panelBottom.Controls.Add(this.webProgress);
          this.panelBottom.Controls.Add(this.labelStatus);
          this.panelBottom.Controls.Add(this.buttonClose);
          this.panelBottom.Controls.Add(this.buttonAdd);
@@ -114,6 +116,25 @@ namespace ReleasePalette
          this.panelBottom.Name = "panelBottom";
          this.panelBottom.Size = new System.Drawing.Size(1269, 26);
          this.panelBottom.TabIndex = 2;
+         // 
+         // webProgress
+         // 
+         this.webProgress.Color = System.Drawing.Color.ForestGreen;
+         this.webProgress.Location = new System.Drawing.Point(90, 0);
+         this.webProgress.Name = "webProgress";
+         this.webProgress.Size = new System.Drawing.Size(22, 22);
+         this.webProgress.TabIndex = 3;
+         this.webProgress.Visible = false;
+         // 
+         // labelStatus
+         // 
+         this.labelStatus.AutoEllipsis = true;
+         this.labelStatus.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelStatus.Location = new System.Drawing.Point(90, 0);
+         this.labelStatus.Name = "labelStatus";
+         this.labelStatus.Size = new System.Drawing.Size(1095, 23);
+         this.labelStatus.TabIndex = 2;
+         this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
          // 
          // buttonClose
          // 
@@ -167,16 +188,6 @@ namespace ReleasePalette
          // 
          this.columnOwned.Text = "Owned";
          // 
-         // labelStatus
-         // 
-         this.labelStatus.AutoEllipsis = true;
-         this.labelStatus.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.labelStatus.Location = new System.Drawing.Point(90, 0);
-         this.labelStatus.Name = "labelStatus";
-         this.labelStatus.Size = new System.Drawing.Size(1095, 23);
-         this.labelStatus.TabIndex = 2;
-         this.labelStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-         // 
          // MissingWorkItems
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -210,5 +221,6 @@ namespace ReleasePalette
       private System.Windows.Forms.ColumnHeader columnHeader2;
       private System.Windows.Forms.ColumnHeader columnOwned;
       private System.Windows.Forms.Label labelStatus;
+      private Core.WinForms.Controls.WebProgress webProgress;
    }
 }
