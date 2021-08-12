@@ -49,11 +49,14 @@ namespace ReleasePalette
             var workItems = pullRequest.WorkItems().ToArray();
             progressBar.Minimum = 1;
             progressBar.Maximum = workItems.Length;
+            progressBar.Step = 1;
             progressBar.Visible = true;
 
             foreach (var workItem in pullRequest.WorkItems())
             {
-               var activePullRequests = workItem.PullRequests().Where(pr => pr.Status == "active").ToArray();
+               var activePullRequests = workItem.PullRequests()
+                  .Where(pr => pr.PullRequestId != PullRequestId && pr.Status != "completed" && pr.Status != "abandoned")
+                  .ToArray();
 
                if (activePullRequests.Length > 0)
                {
@@ -62,7 +65,8 @@ namespace ReleasePalette
 
                   foreach (var activePullRequest in activePullRequests)
                   {
-                     var key = workItemNode.Nodes.Add($"{activePullRequest.PullRequestId} {activePullRequest.Title}").FullPath;
+                     var text = $"{activePullRequest.PullRequestId} {activePullRequest.Title} | {activePullRequest.Status}";
+                     var key = workItemNode.Nodes.Add(text).FullPath;
                      pullRequests[key] = activePullRequest;
                   }
 
@@ -258,5 +262,7 @@ namespace ReleasePalette
 
          progressBar.Visible = false;
       }
+
+      protected void buttonClose_Click(object sender, EventArgs e) => Close();
    }
 }

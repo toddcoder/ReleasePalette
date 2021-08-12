@@ -72,7 +72,7 @@ namespace ReleasePalette
             foreach (var workItem in existing.OrderBy(i => i.Id))
             {
                var item = viewExisting.Items.Add(workItem.Id);
-               item.SubItems.Add(workItem.Title.Truncate(80));
+               item.SubItems.Add(workItem.Title);
             }
 
             viewExisting.AutoSizeColumns();
@@ -83,7 +83,7 @@ namespace ReleasePalette
             foreach (var workItem in missing.Where(i => !existingIds.Contains(i.Id)).OrderBy(i => i.Id))
             {
                var item = viewMissing.Items.Add(workItem.Id);
-               item.SubItems.Add(workItem.Title.Truncate(80));
+               item.SubItems.Add(workItem.Title);
             }
 
             viewMissing.AutoSizeColumns();
@@ -137,6 +137,36 @@ namespace ReleasePalette
       protected void buttonClose_Click(object sender, EventArgs e)
       {
          Close();
+      }
+
+      protected void buttonSelectAll_Click(object sender, EventArgs e)
+      {
+         foreach (ListViewItem item in viewMissing.Items)
+         {
+            item.Checked = true;
+         }
+      }
+
+      protected void buttonUnselectAll_Click(object sender, EventArgs e)
+      {
+         foreach (ListViewItem item in viewMissing.Items)
+         {
+            item.Checked = false;
+         }
+      }
+
+      protected void buttonInvertSelection_Click(object sender, EventArgs e)
+      {
+         foreach (ListViewItem item in viewMissing.Items)
+         {
+            item.Checked = !item.Checked;
+         }
+      }
+
+      protected void MissingWorkItems_Resize(object sender, EventArgs e)
+      {
+         viewExisting.AutoSizeColumns();
+         viewMissing.AutoSizeColumns();
       }
    }
 }

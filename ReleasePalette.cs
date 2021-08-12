@@ -561,8 +561,8 @@ namespace ReleasePalette
       {
          if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch))
          {
-            using var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
-            missingWorkItems.ShowDialog();
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
+            missingWorkItems.Show();
          }
       }
 
@@ -570,8 +570,8 @@ namespace ReleasePalette
       {
          if (getPullRequestId().If(out var pullRequestId))
          {
-            using var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
-            abandon.ShowDialog();
+            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
+            abandon.Show();
          }
       }
 
