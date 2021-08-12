@@ -8,12 +8,12 @@ namespace ReleasePalette
       public OwnedWorkItem(WorkItem workItem)
       {
          WorkItem = workItem;
-         Owned = false;
+         Owned = OwnedStatus.NotOwned;
       }
 
       public WorkItem WorkItem { get; }
 
-      public bool Owned { get; set; }
+      public OwnedStatus Owned { get; set; }
 
       public override string ToString() => $"{WorkItem.Id}: {WorkItem.Title} | {WorkItem.MergedTo}";
 

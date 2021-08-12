@@ -61,7 +61,7 @@ namespace ReleasePalette
             menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
 
             menus.Menu("Tools");
-            menus.Menu("Tools", "Compare", (_, _) => showCompareDialog(), "F2");
+            menus.Menu("Tools", "Missing Work Items", (_, _) => showMissingWorkItemsDialog(), "F2");
             menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "F3");
 
             menus.Menu("Releases");
@@ -89,6 +89,11 @@ namespace ReleasePalette
          {
             showException(exception);
          }
+      }
+
+      protected bool askYesNo(string message)
+      {
+         return MessageBox.Show(message, "Continue", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
       protected void pasteFromClipboard()
@@ -119,9 +124,12 @@ namespace ReleasePalette
                   }
                }
 
-               textValue.Text = text;
-               apply();
-               showSuccess($"Clipboard pasted to {labelName.Text}");
+               if (textValue.TextLength == 0 || askYesNo($"Overwrite {label}?"))
+               {
+                  textValue.Text = text;
+                  apply();
+                  showSuccess($"Clipboard pasted to {labelName.Text}");
+               }
             }
             else
             {
@@ -403,7 +411,7 @@ namespace ReleasePalette
                {
                   if (itemType == ItemType.Url && value.IsNotEmpty())
                   {
-                     showMessage($"Opening {value.Truncate(40)}");
+                     showMessage($"Opening {value}");
                      webBrowser.Navigate(value);
                   }
                   else
@@ -472,7 +480,7 @@ namespace ReleasePalette
          }
 
          var url = e.Url.AbsoluteUri;
-         showSuccess($"Navigated to {url.Truncate(40)}");
+         showSuccess($"Navigated to {url}");
       }
 
       protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e)
@@ -531,9 +539,36 @@ namespace ReleasePalette
          }
       }
 
+      protected Maybe<string> getPullRequestId()
+      {
+         return
+            from masterPullRequestUrl in getTextItem("masterPr")
+            from pullRequestId in pullRequestIdFromUrl(masterPullRequestUrl)
+            select pullRequestId;
+      }
+
+      protected Maybe<string> getReleaseBranch() => getTextItem("release");
+
+      protected Maybe<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
+      {
+         return
+            from pullRequestId in getPullRequestId()
+            from releaseBranch in getReleaseBranch()
+            select (pullRequestId, releaseBranch);
+      }
+
+      protected void showMissingWorkItemsDialog()
+      {
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch))
+         {
+            using var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
+            missingWorkItems.ShowDialog();
+         }
+      }
+
       protected void showAbandonPullRequestsDialog()
       {
-         if (getTextItem("masterPr").If(out var masterPullRequestUrl) && pullRequestIdFromUrl(masterPullRequestUrl).If(out var pullRequestId))
+         if (getPullRequestId().If(out var pullRequestId))
          {
             using var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
             abandon.ShowDialog();

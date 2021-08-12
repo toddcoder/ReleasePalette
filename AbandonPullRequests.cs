@@ -11,7 +11,6 @@ namespace ReleasePalette
 {
    public partial class AbandonPullRequests : Form
    {
-      protected Http http;
       protected StringHash<PullRequest> pullRequests;
       protected StringSet workItemPaths;
       protected CheckingStatus checkingStatus;
@@ -21,7 +20,6 @@ namespace ReleasePalette
          InitializeComponent();
 
          PullRequestId = string.Empty;
-         http = new Http { Base = "tfs", Organization = "LS", Project = "Estream" };
          pullRequests = new StringHash<PullRequest>(true);
          workItemPaths = new StringSet(true);
          checkingStatus = CheckingStatus.None;
@@ -45,7 +43,7 @@ namespace ReleasePalette
             treeViewPullRequests.Nodes.Clear();
             pullRequests.Clear();
 
-            var pullRequest = new PullRequest(PullRequestId, http);
+            var pullRequest = new PullRequest(PullRequestId, Constants.BASE, Constants.ORGANIZATION, Constants.PROJECT);
             pullRequest.Get().Force();
 
             var workItems = pullRequest.WorkItems().ToArray();

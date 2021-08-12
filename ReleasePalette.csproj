@@ -98,6 +98,7 @@
     </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Content\Alignment.cs" />
     <Compile Include="Content\Generator.cs" />
     <Compile Include="Content\Hyperlink.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="OutlookAppointmentItem.cs" />
     <Compile Include="OutlookArguments.cs" />
     <Compile Include="OutlookMailItem.cs" />
+    <Compile Include="OwnedStatus.cs" />
     <Compile Include="Personal.cs" />
     <Compile Include="Release.cs">
       <SubType>Form</SubType>
