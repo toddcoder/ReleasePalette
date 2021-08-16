@@ -1,4 +1,4 @@
 ﻿to: "Evolve Release Management Team"
-cc: "Sukumaran, Sunil; Long, Jack; Price, Sean; {other-to}"
+cc: "Sukumaran, Sunil; Long, Jack; Price, Sean; {other-to}; Bowser, William"
 subject: "Request for an uncleansed migration test against {build}"
 body: "Please execute an uncleansed migration test against {build}"

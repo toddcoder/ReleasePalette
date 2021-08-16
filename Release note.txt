@@ -1,5 +1,5 @@
 ﻿to: "Bowser, William"
-cc: "Sukumaran; Long, Jack; Price, Sean; {other-to}"
+cc: "Sukumaran; Long, Jack; Price, Sean; {other-to}; Bowser, William"
 subject: "{release} Release Notes"
 body: "The release notes for the {release} release is
 [http://informationtechnology/ITCommercial/EstreamProject/Production%20Support/Release%20Notes/Release%20Notes_Estream-{notes-release}.docx](http://informationtechnology/ITCommercial/EstreamProject/Production%20Support/Release%20Notes/Release%20Notes_Estream-{notes-release}.docx)"
