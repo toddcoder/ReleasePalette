@@ -645,7 +645,7 @@ namespace ReleasePalette
          {
             var replacements = getReplacements();
 
-            var resources = new Resources<ReleasePalette>();
+            var resources = new Resources<ReleasePalette>("Emails");
             var source = resources.String(fileName);
             var generator = new EmailGenerator(source, personal);
 
@@ -665,7 +665,7 @@ namespace ReleasePalette
          {
             var replacements = getReplacements();
 
-            var resources = new Resources<ReleasePalette>();
+            var resources = new Resources<ReleasePalette>("Emails");
             var source = resources.String(fileName);
             var generator = new AppointmentGenerator(source, personal);
 

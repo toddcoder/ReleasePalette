@@ -188,37 +188,37 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="RefreshDb.txt" />
+    <EmbeddedResource Include="Emails\RefreshDb.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DbMigration.txt" />
+    <EmbeddedResource Include="Emails\DbMigration.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Deploy.txt" />
+    <EmbeddedResource Include="Emails\Deploy.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Release note.txt" />
+    <EmbeddedResource Include="Emails\Release note.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Security.txt" />
+    <EmbeddedResource Include="Emails\Security.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="PsrRun.txt" />
+    <EmbeddedResource Include="Emails\PsrRun.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="PostDeployment.txt" />
+    <EmbeddedResource Include="Emails\PostDeployment.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DeployPostDeployment.txt" />
+    <EmbeddedResource Include="Emails\DeployPostDeployment.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Closed.txt" />
+    <EmbeddedResource Include="Emails\Closed.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ToDevelop.txt" />
+    <EmbeddedResource Include="Emails\ToDevelop.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ScheduleDeployment.txt" />
+    <EmbeddedResource Include="Emails\ScheduleDeployment.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
