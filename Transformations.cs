@@ -28,7 +28,7 @@ namespace ReleasePalette
             }
          }
 
-         return source.Success();
+         return source;
       }
 
       protected Result<Unit> fileToUri() => tryTo(() =>
