@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Core.Applications;
 using Core.Computers;
 using Core.Monads;
@@ -32,15 +33,10 @@ namespace ReleasePalette
 
             var resources = new Resources<SelfSetup>("Setup");
 
-            foreach (var requiredFileName in requiredFileNames)
+            foreach (var file in requiredFileNames.Select(rfn => userFolder + $"{rfn}.configuration").Where(f => !f.Exists()))
             {
-               var fileName = $"{requiredFileName}.configuration";
-               var file = userFolder + fileName;
-               if (!file.Exists())
-               {
-                  var source = resources.String(fileName);
-                  file.Text = source;
-               }
+               var source = resources.String(file.NameExtension);
+               file.Text = source;
             }
 
             return Unit.Value;
