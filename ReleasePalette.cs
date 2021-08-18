@@ -6,10 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
+using Core.Assertions;
 using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Enumerables;
+using Core.Exceptions;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -514,22 +516,34 @@ namespace ReleasePalette
 
       protected void buttonOpen_Click(object sender, EventArgs e) => open();
 
-      protected Maybe<string> pullRequestIdFromUrl(string url)
+      protected Result<string> pullRequestIdFromUrl(string url)
       {
-         return url.Matches(@"(\d+)(?:\?_a=\w+)?$").Map(result => result.FirstGroup);
+         return
+            from notEmptyUrl in url.Must().Not.BeNullOrEmpty().OrFailure("Pull request URL may not be empty")
+            from pullRequestId in url.Matches(@"(\d+)(?:\?_a=\w+)?$")
+               .Map(result => result.FirstGroup)
+               .Result("Pull request ID couldn't be determined")
+            select pullRequestId;
       }
 
-      protected Maybe<string> getPullRequestId()
+      protected Result<string> getPullRequestId()
       {
          return
             from masterPullRequestUrl in getTextItem("masterPr")
             from pullRequestId in pullRequestIdFromUrl(masterPullRequestUrl)
-            select pullRequestId;
+            from nonNullPullRequestId in pullRequestId.Must().Not.BeNullOrEmpty().OrFailure("Pull request ID must not be empty")
+            select nonNullPullRequestId;
       }
 
-      protected Maybe<string> getReleaseBranch() => getTextItem("release");
+      protected Result<string> getReleaseBranch()
+      {
+         return
+            from release in getTextItem("release")
+            from nonNullRelease in release.Must().Not.BeNullOrEmpty().OrFailure("Release branch must not be empty")
+            select nonNullRelease;
+      }
 
-      protected Maybe<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
+      protected Result<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
       {
          return
             from pullRequestId in getPullRequestId()
@@ -539,19 +553,27 @@ namespace ReleasePalette
 
       protected void showMissingWorkItemsDialog()
       {
-         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch))
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
             var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
             missingWorkItems.Show();
+         }
+         else
+         {
+            showException(exception);
          }
       }
 
       protected void showAbandonPullRequestsDialog()
       {
-         if (getPullRequestId().If(out var pullRequestId))
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
+            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
             abandon.Show();
+         }
+         else
+         {
+            showException(exception);
          }
       }
 
@@ -569,7 +591,7 @@ namespace ReleasePalette
          }
       }
 
-      protected Maybe<string> getTextItem(string key)
+      protected Result<string> getTextItem(string key)
       {
          if (keyToIndexes.Map(key).If(out var index))
          {
@@ -578,7 +600,7 @@ namespace ReleasePalette
          }
          else
          {
-            return nil;
+            return $"Text item {key} not found".Fail();
          }
       }
 
