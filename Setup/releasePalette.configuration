@@ -1,0 +1,5 @@
+﻿release: ""
+releaseFolder: "\\pdfsevolv01corp\data\ProductionSupport\ReleasePalette"
+releaseValidPattern: "^r-\d{1,2}\.\d{1,2}\.\d{1,2}$"
+mapFile: "~\AppData\Local\ReleasePalette\map.configuration"
+dataFile: "~\AppData\Local\ReleasePalette\data.configuration"

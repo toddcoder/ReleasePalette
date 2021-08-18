@@ -11,6 +11,7 @@ using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Enumerables;
+using Core.Exceptions;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -40,16 +41,18 @@ namespace ReleasePalette
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
-         var _configurations =
-            from _configuration in ReleasePaletteConfiguration.Load()
-            from mapConfigurationSource in _configuration.MapFile.TryTo.Text
-            from _mapConfiguration in Configuration.FromString(mapConfigurationSource)
-            from personalSource in (_configuration.MapFile.Folder + "personal.configuration").TryTo.Text
-            from personalConfiguration in Configuration.FromString(personalSource)
-            from _personal in personalConfiguration.Deserialize<Personal>()
-            select (_configuration, _mapConfiguration, _personal);
-         if (_configurations.If(out configuration, out mapConfiguration, out personal, out var exception))
+         var selfSetup = new SelfSetup(@"~\AppData\Local\ReleasePalette");
+         var result = selfSetup.SetUp();
+         if (result.IfNot(out var exception))
          {
+            MessageBox.Show(exception.Message, "Release Palette Self Setup", MessageBoxButtons.OK);
+            return;
+         }
+
+         if (Configurations.Load().If(out var configurations, out exception))
+         {
+            (configuration, mapConfiguration, personal) = configurations;
+
             showSuccess("Configurations loaded");
 
             menus = new FreeMenus { Form = this };
@@ -58,14 +61,12 @@ namespace ReleasePalette
             menus.Menu("Commands", "Paste From Clipboard", (_, _) => pasteFromClipboard(), "^%V");
             menus.Menu("Commands", "Copy To Clipboard", (_, _) => copyToClipboard(), "^%C");
             menus.Menu("Commands", "Apply", (_, _) => apply(), "^A");
-            menus.Menu("Commands", "Open", (_, _) => apply(), "^O");
+            menus.Menu("Commands", "Open", (_, _) => open(), "^O");
+            menus.Menu("Commands", "Set Release", (_, _) => setRelease(), "^R");
 
             menus.Menu("Tools");
             menus.Menu("Tools", "Missing Work Items", (_, _) => showMissingWorkItemsDialog(), "F2");
             menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "F3");
-
-            menus.Menu("Releases");
-            menus.Menu("Releases", "Set Release", (_, _) => setRelease(), "^R");
 
             menus.Menu("Emails");
             menus.Menu("Emails", "Refresh DB", (_, _) => refreshDbEmail());
@@ -79,7 +80,7 @@ namespace ReleasePalette
             menus.Menu("Emails", "Post-Deployment Validation", (_, _) => postDeploymentValidationEmail());
             menus.Menu("Emails", "Post-Deployment Request for EstreamPS and Staging18ua", (_, _) => postDeploymentRequestEmail());
             menus.Menu("Emails", "Release Closed", (_, _) => closedEmail());
-            menus.Menu("Emails", "Release -> Master -> Develop", (_, _) => ToDevelopEmail());
+            menus.Menu("Emails", "Release -> Master -> Develop", (_, _) => toDevelopEmail());
 
             menus.RenderMainMenu();
 
@@ -372,11 +373,11 @@ namespace ReleasePalette
 
             listViewItems.Items[0].Selected = true;
 
-            return Unit.Success();
+            return Unit.Value;
          }
          catch (Exception exception)
          {
-            return failure<Unit>(exception);
+            return exception;
          }
          finally
          {
@@ -515,41 +516,34 @@ namespace ReleasePalette
 
       protected void buttonOpen_Click(object sender, EventArgs e) => open();
 
-      protected Maybe<string> pullRequestIdFromUrl(string url)
+      protected Result<string> pullRequestIdFromUrl(string url)
       {
-         return url.Matches(@"(\d+)(?:\?_a=\w+)?$").Map(result => result.FirstGroup);
+         return
+            from notEmptyUrl in url.Must().Not.BeNullOrEmpty().OrFailure("Pull request URL may not be empty")
+            from pullRequestId in url.Matches(@"(\d+)(?:\?_a=\w+)?$")
+               .Map(result => result.FirstGroup)
+               .Result("Pull request ID couldn't be determined")
+            select pullRequestId;
       }
 
-      protected void showCompareDialog()
-      {
-         var _result =
-            from pullRequestUrl in getTextItem("masterPr").Result("Master PR url not found")
-            from extractedPullRequestId in pullRequestIdFromUrl(pullRequestUrl).Result("Couldn't determine PR id from URL")
-            from releaseDateItem in getTextItem("releaseDate").Result("Couldn't get release date")
-            from releaseDateAssertion in releaseDateItem.Must().Not.BeNullOrEmpty().OrFailure("Release date can't be empty")
-            select (extractedPullRequestId, releaseDateItem);
-         if (_result.If(out var pullRequestId, out var releaseDate, out var exception))
-         {
-            using var addWorkItems = new AddWorkItems { PullRequestId = pullRequestId, TargetDate = releaseDate };
-            addWorkItems.ShowDialog();
-         }
-         else
-         {
-            showException(exception);
-         }
-      }
-
-      protected Maybe<string> getPullRequestId()
+      protected Result<string> getPullRequestId()
       {
          return
             from masterPullRequestUrl in getTextItem("masterPr")
             from pullRequestId in pullRequestIdFromUrl(masterPullRequestUrl)
-            select pullRequestId;
+            from nonNullPullRequestId in pullRequestId.Must().Not.BeNullOrEmpty().OrFailure("Pull request ID must not be empty")
+            select nonNullPullRequestId;
       }
 
-      protected Maybe<string> getReleaseBranch() => getTextItem("release");
+      protected Result<string> getReleaseBranch()
+      {
+         return
+            from release in getTextItem("release")
+            from nonNullRelease in release.Must().Not.BeNullOrEmpty().OrFailure("Release branch must not be empty")
+            select nonNullRelease;
+      }
 
-      protected Maybe<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
+      protected Result<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArguments()
       {
          return
             from pullRequestId in getPullRequestId()
@@ -559,19 +553,27 @@ namespace ReleasePalette
 
       protected void showMissingWorkItemsDialog()
       {
-         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch))
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
             var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
             missingWorkItems.Show();
+         }
+         else
+         {
+            showException(exception);
          }
       }
 
       protected void showAbandonPullRequestsDialog()
       {
-         if (getPullRequestId().If(out var pullRequestId))
+         if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId };
+            var abandon = new AbandonPullRequests { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
             abandon.Show();
+         }
+         else
+         {
+            showException(exception);
          }
       }
 
@@ -585,11 +587,11 @@ namespace ReleasePalette
          }
          else
          {
-            return none<(string, string)>();
+            return nil;
          }
       }
 
-      protected Maybe<string> getTextItem(string key)
+      protected Result<string> getTextItem(string key)
       {
          if (keyToIndexes.Map(key).If(out var index))
          {
@@ -598,7 +600,7 @@ namespace ReleasePalette
          }
          else
          {
-            return none<string>();
+            return $"Text item {key} not found".Fail();
          }
       }
 
@@ -645,7 +647,7 @@ namespace ReleasePalette
          {
             var replacements = getReplacements();
 
-            var resources = new Resources<ReleasePalette>();
+            var resources = new Resources<ReleasePalette>("Emails");
             var source = resources.String(fileName);
             var generator = new EmailGenerator(source, personal);
 
@@ -653,7 +655,7 @@ namespace ReleasePalette
          }
          catch (Exception exception)
          {
-            return failure<Unit>(exception);
+            return exception;
          }
       }
 
@@ -665,7 +667,7 @@ namespace ReleasePalette
          {
             var replacements = getReplacements();
 
-            var resources = new Resources<ReleasePalette>();
+            var resources = new Resources<ReleasePalette>("Emails");
             var source = resources.String(fileName);
             var generator = new AppointmentGenerator(source, personal);
 
@@ -673,7 +675,7 @@ namespace ReleasePalette
          }
          catch (Exception exception)
          {
-            return failure<Unit>(exception);
+            return exception;
          }
       }
 
@@ -714,6 +716,6 @@ namespace ReleasePalette
 
       protected void closedEmail() => openEmail("Closed.txt");
 
-      protected void ToDevelopEmail() => openEmail("ToDevelop.txt");
+      protected void toDevelopEmail() => openEmail("ToDevelop.txt");
    }
 }

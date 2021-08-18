@@ -1,0 +1,72 @@
+﻿release [
+    label: Release
+    type: text
+]
+releaseType [
+    label: Release Type
+    type: list
+    values: Release, Patch, Hotfix
+]
+releaseDate [
+    label: Release Date
+    type: text
+]
+outageType [
+    label: Outage Type
+    type: list
+    values: Rolling, Outage
+]
+remedy [
+    label: Remedy ticket
+    type: text
+]
+build [
+    label: Deployment Build
+    type: text
+]
+prodUrl [
+    label: Deployment Build URL (Prod)
+    type: url
+]
+releaseUrl [
+    label: Deployment Build URL (Release)
+    type: url
+]
+releaseArtifact [
+    label: Release Artifact
+    type: transform
+    functions: fileToUri
+]
+environment [
+    label: Environment
+    type: list
+    values: estreamuat, estream01ua, staging17ua, staging18ua, staging01ua
+]
+environmentUrl [
+    label: Environment URL
+    type: url
+]
+estreamPs [
+    label: EstreamPS Deployment Request
+    type: text
+]
+staging18Ua [
+    label: staging18ua Deployment Request
+    type: text
+]
+masterPr [
+    label: Release -> Master PR
+    type: url
+]
+masterPrTitle [
+    label: Release -> Master PR Title
+    type: text
+]
+developBuild [
+    label: Develop -> Master-2d Build
+    type: url
+]
+master2dPr [
+    label: Master-2d -> Develop PR
+    type: url
+]
