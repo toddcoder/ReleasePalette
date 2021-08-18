@@ -20,12 +20,16 @@ namespace ReleasePalette
          InitializeComponent();
 
          PullRequestId = string.Empty;
+         ReleaseBranch = string.Empty;
+
          pullRequests = new StringHash<PullRequest>(true);
          workItemPaths = new StringSet(true);
          checkingStatus = CheckingStatus.None;
       }
 
       public string PullRequestId { get; set; }
+
+      public string ReleaseBranch { get; set; }
 
       protected void loadPullRequests(bool show)
       {
@@ -52,20 +56,21 @@ namespace ReleasePalette
             progressBar.Step = 1;
             progressBar.Visible = true;
 
-            foreach (var workItem in pullRequest.WorkItems())
+            foreach (var workItem in pullRequest.WorkItems().Where(wi => wi.MergedTo.StartsWith(ReleaseBranch)))
             {
                var activePullRequests = workItem.PullRequests()
-                  .Where(pr => pr.PullRequestId != PullRequestId && pr.Status != "completed" && pr.Status != "abandoned")
+                  .Where(pr => pr.PullRequestId != PullRequestId && pr.Status != "completed" && pr.Status != "abandoned" &&
+                     pr.TargetBranch == "master")
                   .ToArray();
 
                if (activePullRequests.Length > 0)
                {
-                  var workItemNode = treeViewPullRequests.Nodes.Add($"{workItem.WorkItemType} {workItem.Id} {workItem.Title}");
+                  var workItemNode = treeViewPullRequests.Nodes.Add($"{workItem.WorkItemType} {workItem.Id}: {workItem.Title} | {workItem.MergedTo}");
                   workItemPaths.Add(workItemNode.FullPath);
 
                   foreach (var activePullRequest in activePullRequests)
                   {
-                     var text = $"{activePullRequest.PullRequestId} {activePullRequest.Title} | {activePullRequest.Status}";
+                     var text = $"{activePullRequest.PullRequestId}: {activePullRequest.Title} | {activePullRequest.Status}";
                      var key = workItemNode.Nodes.Add(text).FullPath;
                      pullRequests[key] = activePullRequest;
                   }

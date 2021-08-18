@@ -92,6 +92,7 @@ namespace ReleasePalette
                var item = listView.Items.Add(workItem.Id);
                item.SubItems.Add(workItem.Title);
             }
+
             listView.AutoSizeColumns();
          }
          catch
@@ -103,9 +104,6 @@ namespace ReleasePalette
          }
       }
 
-      protected void AddWorkItems_Load(object sender, EventArgs e)
-      {
-         loadWorkItems(true);
-      }
+      protected void AddWorkItems_Load(object sender, EventArgs e) => loadWorkItems(true);
    }
 }

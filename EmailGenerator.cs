@@ -4,7 +4,6 @@ using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Monads;
-using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
@@ -61,16 +60,16 @@ namespace ReleasePalette
                item.ResolveAll();
                item.Display();
 
-               return Unit.Success();
+               return Unit.Value;
             }
             else
             {
-               return failure<Unit>(exception);
+               return exception;
             }
          }
          catch (Exception exception)
          {
-            return failure<Unit>(exception);
+            return exception;
          }
       }
    }

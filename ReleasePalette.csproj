@@ -98,6 +98,7 @@
     </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
+    <Compile Include="Configurations.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Content\Alignment.cs" />
     <Compile Include="Content\Generator.cs" />
@@ -108,15 +109,7 @@
     <Compile Include="Content\Style.cs" />
     <Compile Include="Content\Table.cs" />
     <Compile Include="EmailGenerator.cs" />
-    <Compile Include="Compare.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Compare.Designer.cs">
-      <DependentUpon>Compare.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Comparer.cs" />
     <Compile Include="IOutlookItem.cs" />
-    <Compile Include="Item.cs" />
     <Compile Include="ItemType.cs" />
     <Compile Include="MissingWorkItems.cs">
       <SubType>Form</SubType>
@@ -127,7 +120,6 @@
     <Compile Include="OutlookAppointmentItem.cs" />
     <Compile Include="OutlookArguments.cs" />
     <Compile Include="OutlookMailItem.cs" />
-    <Compile Include="OwnedStatus.cs" />
     <Compile Include="Personal.cs" />
     <Compile Include="Release.cs">
       <SubType>Form</SubType>
@@ -144,16 +136,13 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReleasePaletteConfiguration.cs" />
+    <Compile Include="SelfSetup.cs" />
     <Compile Include="Transformations.cs" />
-    <Compile Include="OwnedWorkItem.cs" />
     <EmbeddedResource Include="AbandonPullRequests.resx">
       <DependentUpon>AbandonPullRequests.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="AddWorkItems.resx">
       <DependentUpon>AddWorkItems.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Compare.resx">
-      <DependentUpon>Compare.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MissingWorkItems.resx">
       <DependentUpon>MissingWorkItems.cs</DependentUpon>
@@ -183,42 +172,45 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <EmbeddedResource Include="Setup\releasePalette.configuration" />
+    <EmbeddedResource Include="Setup\map.configuration" />
+    <EmbeddedResource Include="Setup\personal.configuration" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="RefreshDb.txt" />
+    <EmbeddedResource Include="Emails\RefreshDb.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DbMigration.txt" />
+    <EmbeddedResource Include="Emails\DbMigration.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Deploy.txt" />
+    <EmbeddedResource Include="Emails\Deploy.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Release note.txt" />
+    <EmbeddedResource Include="Emails\Release note.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Security.txt" />
+    <EmbeddedResource Include="Emails\Security.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="PsrRun.txt" />
+    <EmbeddedResource Include="Emails\PsrRun.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="PostDeployment.txt" />
+    <EmbeddedResource Include="Emails\PostDeployment.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DeployPostDeployment.txt" />
+    <EmbeddedResource Include="Emails\DeployPostDeployment.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Closed.txt" />
+    <EmbeddedResource Include="Emails\Closed.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ToDevelop.txt" />
+    <EmbeddedResource Include="Emails\ToDevelop.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ScheduleDeployment.txt" />
+    <EmbeddedResource Include="Emails\ScheduleDeployment.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

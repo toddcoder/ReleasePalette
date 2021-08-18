@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Core.Enumerables;
-using Core.Strings;
 using Core.WinForms;
 using Tfs.Library;
 
@@ -134,10 +133,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void buttonClose_Click(object sender, EventArgs e)
-      {
-         Close();
-      }
+      protected void buttonClose_Click(object sender, EventArgs e) => Close();
 
       protected void buttonSelectAll_Click(object sender, EventArgs e)
       {
