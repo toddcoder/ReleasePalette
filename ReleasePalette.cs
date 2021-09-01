@@ -65,7 +65,8 @@ namespace ReleasePalette
             menus.Menu("Commands", "Set Release", (_, _) => setRelease(), "^R");
 
             menus.Menu("Tools");
-            menus.Menu("Tools", "Missing Work Items", (_, _) => showMissingWorkItemsDialog(), "F2");
+            menus.Menu("Tools", "Missing Work Items (master)", (_, _) => showMissingWorkItemsDialog(), "F2");
+            menus.Menu("Tools", "Missing Work Items (master2d)", (_, _) => showMissingWorkItemsDialogMaster2d(), "^F2");
             menus.Menu("Tools", "Abandon Pull Requests", (_, _) => showAbandonPullRequestsDialog(), "F3");
 
             menus.Menu("Emails");
@@ -535,6 +536,15 @@ namespace ReleasePalette
             select nonNullPullRequestId;
       }
 
+      protected Result<string> getPullRequestMaster2dId()
+      {
+         return
+            from masterPullRequestUrl in getTextItem("master2dPr")
+            from pullRequestId in pullRequestIdFromUrl(masterPullRequestUrl)
+            from nonNullPullRequestId in pullRequestId.Must().Not.BeNullOrEmpty().OrFailure("Pull request ID must not be empty")
+            select nonNullPullRequestId;
+      }
+
       protected Result<string> getReleaseBranch()
       {
          return
@@ -551,11 +561,32 @@ namespace ReleasePalette
             select (pullRequestId, releaseBranch);
       }
 
+      protected Result<(string pullRequestId, string releaseBranch)> getMissingWorkItemsArgumentsMaster2d()
+      {
+         return
+            from pullRequestId in getPullRequestMaster2dId()
+            from releaseBranch in getReleaseBranch()
+            select (pullRequestId, releaseBranch);
+      }
+
       protected void showMissingWorkItemsDialog()
       {
          if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch };
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master"};
+            missingWorkItems.Show();
+         }
+         else
+         {
+            showException(exception);
+         }
+      }
+
+      protected void showMissingWorkItemsDialogMaster2d()
+      {
+         if (getMissingWorkItemsArgumentsMaster2d().If(out var pullRequestId, out var releaseBranch, out var exception))
+         {
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master2d"};
             missingWorkItems.Show();
          }
          else
