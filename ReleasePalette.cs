@@ -374,7 +374,7 @@ namespace ReleasePalette
 
             listViewItems.Items[0].Selected = true;
 
-            return Unit.Value;
+            return unit;
          }
          catch (Exception exception)
          {
