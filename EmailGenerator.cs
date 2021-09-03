@@ -4,6 +4,7 @@ using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Monads;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
@@ -60,7 +61,7 @@ namespace ReleasePalette
                item.ResolveAll();
                item.Display();
 
-               return Unit.Value;
+               return unit;
             }
             else
             {

@@ -1,6 +1,7 @@
 ﻿using Core.Matching;
 using Core.Monads;
 using static Core.Monads.AttemptFunctions;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
@@ -36,7 +37,7 @@ namespace ReleasePalette
          source = source.Substitute("^file://", @"\\");
          source = source.Substitute("/", @"\");
 
-         return Unit.Value;
+         return unit;
       });
    }
 }

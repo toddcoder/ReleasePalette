@@ -246,20 +246,11 @@ namespace ReleasePalette
          foreach (var (fullPath, pullRequest) in selectedPullRequests)
          {
             var _foundNode = findNodeByPath(fullPath);
-            Maybe<string> _text;
-            if (pullRequest.Abandon().If(out _, out var exception))
-            {
-               _text = $"PR {pullRequest.PullRequestId} abandoned";
-            }
-            else
-            {
-               _text = $"Exception: {exception.Message}";
-            }
-
-            if (_foundNode.If(out var foundNode) && _text.If(out var text))
+            pullRequest.Abandon();
+            if (_foundNode.If(out var foundNode))
             {
                treeViewPullRequests.SelectedNode = foundNode;
-               foundNode.Text = text;
+               foundNode.Text = $"PR {pullRequest.PullRequestId} abandoned";
             }
 
             progressBar.PerformStep();

@@ -16,11 +16,14 @@ namespace ReleasePalette
 
          PullRequestId = string.Empty;
          ReleaseBranch = string.Empty;
+         Type = string.Empty;
       }
 
       public string PullRequestId { get; set; }
 
       public string ReleaseBranch { get; set; }
+
+      public string Type { get; set; }
 
       protected IEnumerable<WorkItem> getExistingWorkItems()
       {
@@ -103,7 +106,7 @@ namespace ReleasePalette
 
       protected void MissingWorkItems_Load(object sender, EventArgs e)
       {
-         labelPullRequestId.Text = $"Pull Request {PullRequestId}";
+         labelPullRequestId.Text = $"Pull Request {PullRequestId} ({Type})";
 
          loadViews(true);
       }
