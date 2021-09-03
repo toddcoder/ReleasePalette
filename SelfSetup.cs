@@ -3,6 +3,7 @@ using System.Linq;
 using Core.Applications;
 using Core.Computers;
 using Core.Monads;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette
 {
@@ -39,7 +40,7 @@ namespace ReleasePalette
                file.Text = source;
             }
 
-            return Unit.Value;
+            return unit;
          }
          catch (Exception exception)
          {
