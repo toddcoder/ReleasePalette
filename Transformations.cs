@@ -21,11 +21,11 @@ namespace ReleasePalette
             var result = function switch
             {
                "fileToUri" => fileToUri(),
-               _ => $"Didn't recognize function {function}".Failure<Unit>()
+               _ => fail($"Didn't recognize function {function}")
             };
-            if (result.IsFailed)
+            if (result.IfNot(out var exception))
             {
-               return result.CastAs<string>();
+               return exception;
             }
          }
 

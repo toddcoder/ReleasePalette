@@ -11,7 +11,6 @@ using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Enumerables;
-using Core.Exceptions;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -334,7 +333,7 @@ namespace ReleasePalette
                         var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
                         if (valuesList.Length <= 1)
                         {
-                           return "List types must have at least two items".Failure<Unit>();
+                           return fail("List types must have at least two items");
                         }
 
                         keyToList[key] = new StringSet(true, valuesList);
@@ -356,7 +355,7 @@ namespace ReleasePalette
                   from source in dataFile.TryTo.Text
                   from configurationFromString in Configuration.FromString(source)
                   select configurationFromString;
-               if (_data.ValueOrCast(out var dataConfiguration, out Result<Unit> asUnit))
+               if (_data.If(out var dataConfiguration, out var exception))
                {
                   foreach (var (key, value) in dataConfiguration.Values())
                   {
@@ -368,7 +367,7 @@ namespace ReleasePalette
                }
                else
                {
-                  return asUnit;
+                  return exception;
                }
             }
 
@@ -631,7 +630,7 @@ namespace ReleasePalette
          }
          else
          {
-            return $"Text item {key} not found".Fail();
+            return fail($"Text item {key} not found");
          }
       }
 

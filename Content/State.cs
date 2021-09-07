@@ -12,7 +12,7 @@ namespace ReleasePalette.Content
          Document = document;
          Styles = new StringHash<Style>(true);
          Fonts = new AutoStringHash<FontDescriptor>(true, fontName => Document.Font(fontName), true);
-         ParagraphStash = none<Paragraph>();
+         ParagraphStash = nil;
       }
 
       public Document Document { get; }

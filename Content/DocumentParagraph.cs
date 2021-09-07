@@ -26,7 +26,7 @@ namespace ReleasePalette.Content
          }
       }
 
-      public static DocumentParagraph Empty => new(string.Empty, none<Style>());
+      public static DocumentParagraph Empty => new(string.Empty, nil);
 
       public DocumentParagraph(string text, Maybe<Style> _style)
       {
