@@ -9,9 +9,10 @@ namespace ReleasePalette
       {
          return
             from configuration in ReleasePaletteConfiguration.Load()
-            from mapConfigurationSource in configuration.MapFile.TryTo.Text
+            let mapFile = configuration.ReleaseFolder + "map.configuration"
+            from mapConfigurationSource in mapFile.TryTo.Text
             from mapConfiguration in Core.Configurations.Configuration.FromString(mapConfigurationSource)
-            let personalFile = configuration.MapFile.Folder + "personal.configuration"
+            let personalFile = configuration.ReleaseFolder + "personal.configuration"
             from personalSource in personalFile.TryTo.Text
             from personalConfiguration in Core.Configurations.Configuration.FromString(personalSource)
             from personal in personalConfiguration.Deserialize<Personal>()

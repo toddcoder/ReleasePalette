@@ -13,7 +13,7 @@ namespace ReleasePalette
 
       static SelfSetup()
       {
-         requiredFileNames = new[] { "releasePalette", "map", "personal" };
+         requiredFileNames = new[] { "releasePalette", "personal" };
       }
 
       protected FolderName userFolder;

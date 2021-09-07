@@ -15,7 +15,7 @@ namespace ReleasePalette
          InitializeComponent();
       }
 
-      public FolderName DataFolder { get; set; }
+      public FolderName ReleaseFolder { get; set; }
 
       public string ReleaseValidPattern { get; set; }
 
@@ -34,7 +34,7 @@ namespace ReleasePalette
             textRelease.Text = ReleaseValue;
          }
 
-         listReleases.Items.AddRange(DataFolder.Files
+         listReleases.Items.AddRange(ReleaseFolder.Files
             .Where(f => isValid(f.Name))
             .OrderBy(f => f.Name)
             .Select(f => f.Name)
@@ -74,7 +74,7 @@ namespace ReleasePalette
             ReleaseValue = textRelease.Text;
          }
 
-         IsNew = !(DataFolder + $"{ReleaseValue}.configuration").Exists() && DialogResult == DialogResult.OK;
+         IsNew = !(ReleaseFolder + $"{ReleaseValue}.configuration").Exists() && DialogResult == DialogResult.OK;
       }
 
       protected void listReleases_SelectedIndexChanged(object sender, EventArgs e)

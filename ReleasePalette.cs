@@ -31,11 +31,13 @@ namespace ReleasePalette
       protected StringHash labelToKeys;
       protected StringHash<StringSet> keyToList;
       protected StringHash<string[]> labelToTransformations;
+      protected bool configurationLoaded;
 
       public ReleasePalette()
       {
          InitializeComponent();
          Pattern.IsFriendly = false;
+         configurationLoaded = false;
       }
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
@@ -50,6 +52,8 @@ namespace ReleasePalette
 
          if (Configurations.Load().If(out var configurations, out exception))
          {
+            configurationLoaded = true;
+
             (configuration, mapConfiguration, personal) = configurations;
 
             showSuccess("Configurations loaded");
@@ -88,7 +92,9 @@ namespace ReleasePalette
          }
          else
          {
-            showException(exception);
+            MessageBox.Show(exception.Message, "Critical Error", MessageBoxButtons.OK);
+            configurationLoaded = false;
+            Close();
          }
       }
 
@@ -167,7 +173,7 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
                dataFile.Text = dataConfiguration.ToString();
                dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
                loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
@@ -200,7 +206,7 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+               var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
                dataFile.Text = dataConfiguration.ToString();
                dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
@@ -270,13 +276,13 @@ namespace ReleasePalette
       {
          using var releaseDialog = new Release
          {
-            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, DataFolder = configuration.MapFile.Folder
+            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, ReleaseFolder = configuration.ReleaseFolder
          };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
 
-            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
             if (!dataFile.Exists())
             {
                if (releaseDialog.IsNew)
@@ -348,7 +354,7 @@ namespace ReleasePalette
                }
             }
 
-            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
+            var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
             if (dataFile.Exists())
             {
                var _data =
@@ -486,8 +492,11 @@ namespace ReleasePalette
 
       protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e)
       {
-         saveData();
-         configuration.Save();
+         if (configurationLoaded)
+         {
+            saveData();
+            configuration.Save();
+         }
       }
 
       protected void open()

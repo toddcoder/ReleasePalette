@@ -33,8 +33,7 @@ namespace ReleasePalette
                Release = "r-6.24.0",
                ReleaseFolder = @"\\pdfsevolv01corp\data\ProductionSupport\ReleasePalette",
                ReleaseValidPattern = @"^r-\d{1,2}\.\d{1,2}\.\d{1,2}$",
-               MapFile = configurationFolder + "map.configuration",
-               DataFile = configurationFolder + "data.configuration"
+               MapFile = "map.configuration",
             };
 
             return configuration.Save().Map(_ => configuration);
@@ -47,9 +46,7 @@ namespace ReleasePalette
 
       public string ReleaseValidPattern { get; set; }
 
-      public FileName MapFile { get; set; }
-
-      public FileName DataFile { get; set; }
+      public string MapFile { get; set; }
 
       public Result<Unit> Save()
       {

@@ -185,7 +185,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="Setup\releasePalette.configuration" />
-    <EmbeddedResource Include="Setup\map.configuration" />
     <EmbeddedResource Include="Setup\personal.configuration" />
   </ItemGroup>
   <ItemGroup>
