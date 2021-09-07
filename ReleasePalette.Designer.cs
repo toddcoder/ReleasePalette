@@ -233,6 +233,7 @@ namespace ReleasePalette
          this.Text = "Release Palette";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ReleasePalette_FormClosing);
          this.Load += new System.EventHandler(this.ReleasePalette_Load);
+         this.SizeChanged += new System.EventHandler(this.ReleasePalette_SizeChanged);
          this.tableMain.ResumeLayout(false);
          this.panelItems.ResumeLayout(false);
          this.panelControls.ResumeLayout(false);

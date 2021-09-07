@@ -69,12 +69,15 @@ namespace ReleasePalette
 
       protected void Release_FormClosing(object sender, FormClosingEventArgs e)
       {
-         if (isValid(textRelease.Text))
+         if (DialogResult == DialogResult.OK)
          {
-            ReleaseValue = textRelease.Text;
-         }
+            if (isValid(textRelease.Text))
+            {
+               ReleaseValue = textRelease.Text;
+            }
 
-         IsNew = !(ReleaseFolder + $"{ReleaseValue}.configuration").Exists() && DialogResult == DialogResult.OK;
+            IsNew = !(ReleaseFolder + $"{ReleaseValue}.configuration").Exists();
+         }
       }
 
       protected void listReleases_SelectedIndexChanged(object sender, EventArgs e)
@@ -97,6 +100,18 @@ namespace ReleasePalette
                Close();
             }
          }
+      }
+
+      protected void buttonOk_Click(object sender, EventArgs e)
+      {
+         DialogResult = DialogResult.OK;
+         Close();
+      }
+
+      protected void buttonCancel_Click(object sender, EventArgs e)
+      {
+         DialogResult = DialogResult.Cancel;
+         Close();
       }
    }
 }

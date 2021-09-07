@@ -54,12 +54,13 @@ namespace ReleasePalette
          File = dataFile;
       }
 
-      public Result<Configuration> DataConfiguration()
+      public Result<Configuration> DataConfiguration(ReleasePaletteConfiguration configuration)
       {
+         ResetFile(configuration);
          return
             from source in file.TryTo.Text
-            from configuration in Configuration.FromString(source)
-            select configuration;
+            from dataConfiguration in Configuration.FromString(source)
+            select dataConfiguration;
       }
    }
 }
