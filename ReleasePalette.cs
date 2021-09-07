@@ -42,7 +42,8 @@ namespace ReleasePalette
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
-         var selfSetup = new SelfSetup(@"~\AppData\Local\ReleasePalette");
+         FolderName userFolder = @"~\AppData\Local\ReleasePalette";
+         var selfSetup = new SelfSetup(userFolder);
          var result = selfSetup.SetUp();
          if (result.IfNot(out var exception))
          {
@@ -50,7 +51,7 @@ namespace ReleasePalette
             return;
          }
 
-         if (Configurations.Load().If(out var configurations, out exception))
+         if (Configurations.Load(userFolder).If(out var configurations, out exception))
          {
             configurationLoaded = true;
 
@@ -209,11 +210,6 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               /*var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
-               dataFile.Text = dataConfiguration.ToString();
-               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
-                  .OnSuccess(_ => showSuccess("Data saved"))
-                  .OnFailure(e => showException(e));*/
                watcher.ResetFile(configuration, dataConfiguration);
             }
             else
@@ -286,9 +282,6 @@ namespace ReleasePalette
          {
             configuration.Release = releaseDialog.ReleaseValue;
 
-            /*var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
-            if (!dataFile.Exists())
-            {*/
             if (releaseDialog.IsNew)
             {
                newData();
@@ -297,15 +290,6 @@ namespace ReleasePalette
             {
                saveData();
             }
-            //}
-
-            /*configuration.Save()
-               .OnSuccess(_ =>
-               {
-                  loadItems();
-                  showTitle();
-               })
-               .OnFailure(exception => showException(exception));*/
          }
       }
 
@@ -358,27 +342,19 @@ namespace ReleasePalette
                }
             }
 
-            var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
-            if (dataFile.Exists())
+            if (watcher.DataConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var _data =
-                  from source in dataFile.TryTo.Text
-                  from configurationFromString in Configuration.FromString(source)
-                  select configurationFromString;
-               if (_data.If(out var dataConfiguration, out var exception))
+               foreach (var (key, value) in dataConfiguration.Values())
                {
-                  foreach (var (key, value) in dataConfiguration.Values())
+                  if (keyToIndexes.If(key, out index))
                   {
-                     if (keyToIndexes.If(key, out index))
-                     {
-                        listViewItems.Items[index].SubItems.Add(value);
-                     }
+                     listViewItems.Items[index].SubItems.Add(value);
                   }
                }
-               else
-               {
-                  return exception;
-               }
+            }
+            else
+            {
+               return exception;
             }
 
             listViewItems.Items[0].Selected = true;
@@ -395,7 +371,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e) => selectedIndexAction(none<string>());
+      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e) => selectedIndexAction(nil);
 
       protected void selectedIndexAction(Maybe<string> _value)
       {

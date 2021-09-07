@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Core.Computers;
 using Core.Configurations;
+using Core.Monads;
 
 namespace ReleasePalette
 {
@@ -51,6 +52,14 @@ namespace ReleasePalette
          dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
 
          File = dataFile;
+      }
+
+      public Result<Configuration> DataConfiguration()
+      {
+         return
+            from source in file.TryTo.Text
+            from configuration in Configuration.FromString(source)
+            select configuration;
       }
    }
 }
