@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
+    <Compile Include="ConfigurationFileWatcher.cs" />
     <Compile Include="Configurations.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Content\Alignment.cs" />
@@ -185,7 +186,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="Setup\releasePalette.configuration" />
-    <EmbeddedResource Include="Setup\map.configuration" />
     <EmbeddedResource Include="Setup\personal.configuration" />
   </ItemGroup>
   <ItemGroup>

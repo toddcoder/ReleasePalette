@@ -33,7 +33,7 @@ namespace ReleasePalette.Content
          var source = new Source(text);
          var tableLines = new List<string>();
          var paragraphLines = new List<string>();
-         var _style = none<Style>();
+         Maybe<Style> _style = nil;
          var generators = new List<Generator>();
          var widths = new List<float>();
 
@@ -56,7 +56,7 @@ namespace ReleasePalette.Content
                var paragraph = new DocumentParagraph(paragraphText, _style);
                generators.Add(paragraph);
                paragraphLines.Clear();
-               _style = none<Style>();
+               _style = nil;
             }
          }
 
@@ -66,13 +66,13 @@ namespace ReleasePalette.Content
             {
                var styleName = result.FirstGroup;
                var specification = line.Drop(result.Length).Trim();
-               if (Style.FromSpecification(specification, true).ValueOrCast(out var style, out Result<Document> asDocument))
+               if (Style.FromSpecification(specification, true).If(out var style, out var exception))
                {
                   state.Styles[styleName] = style;
                }
                else
                {
-                  return asDocument;
+                  return exception;
                }
             }
             else if (line.Matches(PATTERN_TABLE_WIDTHS).If(out result))
@@ -125,7 +125,7 @@ namespace ReleasePalette.Content
             generator.Generate(state);
          }
 
-         return state.Document.Success();
+         return state.Document;
       }
    }
 }
