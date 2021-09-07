@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
 using Core.Assertions;
@@ -11,7 +10,6 @@ using Core.Collections;
 using Core.Computers;
 using Core.Configurations;
 using Core.Enumerables;
-using Core.Exceptions;
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
@@ -32,16 +30,20 @@ namespace ReleasePalette
       protected StringHash labelToKeys;
       protected StringHash<StringSet> keyToList;
       protected StringHash<string[]> labelToTransformations;
+      protected bool configurationLoaded;
+      protected ConfigurationFileWatcher watcher;
 
       public ReleasePalette()
       {
          InitializeComponent();
          Pattern.IsFriendly = false;
+         configurationLoaded = false;
       }
 
       protected void ReleasePalette_Load(object sender, EventArgs e)
       {
-         var selfSetup = new SelfSetup(@"~\AppData\Local\ReleasePalette");
+         FolderName userFolder = @"~\AppData\Local\ReleasePalette";
+         var selfSetup = new SelfSetup(userFolder);
          var result = selfSetup.SetUp();
          if (result.IfNot(out var exception))
          {
@@ -49,11 +51,31 @@ namespace ReleasePalette
             return;
          }
 
-         if (Configurations.Load().If(out var configurations, out exception))
+         if (Configurations.Load(userFolder).If(out var configurations, out exception))
          {
+            configurationLoaded = true;
+
             (configuration, mapConfiguration, personal) = configurations;
 
             showSuccess("Configurations loaded");
+
+            watcher = new ConfigurationFileWatcher(configuration);
+            watcher.FileChanged += (_, _) =>
+            {
+               if (ReleasePaletteConfiguration.Load().If(out configuration, out var loadException))
+               {
+                  listViewItems.Do(() =>
+                  {
+                     loadItems()
+                        .OnSuccess(_ => showMessage("Release file changed"))
+                        .OnFailure(showException);
+                  });
+               }
+               else
+               {
+                  showException(loadException);
+               }
+            };
 
             menus = new FreeMenus { Form = this };
 
@@ -85,11 +107,13 @@ namespace ReleasePalette
 
             menus.RenderMainMenu();
 
-            loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(loadException => showException(loadException));
+            loadItems().OnSuccess(_ => listViewItems.AutoSizeColumns()).OnFailure(showException);
          }
          else
          {
-            showException(exception);
+            MessageBox.Show(exception.Message, "Critical Error", MessageBoxButtons.OK);
+            configurationLoaded = false;
+            Close();
          }
       }
 
@@ -115,7 +139,7 @@ namespace ReleasePalette
                if (_functions.If(out var functions, out var label))
                {
                   var transformations = new Transformations(text);
-                  transformations.Transform(functions).OnSuccess(_ => showSuccess($"{label} transformed")).OnFailure(e => showException(e));
+                  transformations.Transform(functions).OnSuccess(_ => showSuccess($"{label} transformed")).OnFailure(showException);
                   if (transformations.Transform(functions).If(out text, out var exception))
                   {
                   }
@@ -168,10 +192,7 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
-               dataFile.Text = dataConfiguration.ToString();
-               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
-               loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
+               watcher.ResetFile(configuration, dataConfiguration);
             }
             else
             {
@@ -197,15 +218,15 @@ namespace ReleasePalette
                {
                   dataHash[key] = value;
                }
+               else
+               {
+                  dataHash[key] = string.Empty;
+               }
             }
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
-               dataFile.Text = dataConfiguration.ToString();
-               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
-                  .OnSuccess(_ => showSuccess("Data saved"))
-                  .OnFailure(e => showException(e));
+               watcher.ResetFile(configuration, dataConfiguration);
             }
             else
             {
@@ -225,13 +246,11 @@ namespace ReleasePalette
          labelMessage.Text = message;
       }
 
-      protected ReleasePalette showException(Exception exception)
+      protected void showException(Exception exception)
       {
          labelMessage.ForeColor = Color.White;
          labelMessage.BackColor = Color.Red;
          labelMessage.Text = exception.Message;
-
-         return this;
       }
 
       protected void showFailure(string message)
@@ -241,62 +260,31 @@ namespace ReleasePalette
          labelMessage.Text = message;
       }
 
-      protected ReleasePalette showSuccess(string message)
+      protected void showSuccess(string message)
       {
          labelMessage.ForeColor = Color.White;
          labelMessage.BackColor = Color.Green;
          labelMessage.Text = message;
-
-         return this;
-      }
-
-      protected void showTitle()
-      {
-         Text = $"Release Palette - Release {configuration.Release}";
-      }
-
-      protected ReleasePalette setConfiguration(ReleasePaletteConfiguration newConfiguration)
-      {
-         configuration = newConfiguration;
-         return this;
-      }
-
-      protected ReleasePalette setMapConfiguration(Configuration newConfiguration)
-      {
-         mapConfiguration = newConfiguration;
-         return this;
       }
 
       protected void setRelease()
       {
          using var releaseDialog = new Release
          {
-            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, DataFolder = configuration.MapFile.Folder
+            ReleaseValue = configuration.Release, ReleaseValidPattern = configuration.ReleaseValidPattern, ReleaseFolder = configuration.ReleaseFolder
          };
          if (releaseDialog.ShowDialog(this) == DialogResult.OK)
          {
             configuration.Release = releaseDialog.ReleaseValue;
 
-            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
-            if (!dataFile.Exists())
+            if (releaseDialog.IsNew)
             {
-               if (releaseDialog.IsNew)
-               {
-                  newData();
-               }
-               else
-               {
-                  saveData();
-               }
+               newData();
             }
-
-            configuration.Save()
-               .OnSuccess(_ =>
-               {
-                  loadItems();
-                  showTitle();
-               })
-               .OnFailure(exception => showException(exception));
+            else
+            {
+               loadItems();
+            }
          }
       }
 
@@ -334,7 +322,7 @@ namespace ReleasePalette
                         var valuesList = valuesSource.Split(@"\s*,\s*").Select(i => i.Trim()).ToArray();
                         if (valuesList.Length <= 1)
                         {
-                           return "List types must have at least two items".Failure<Unit>();
+                           return fail("List types must have at least two items");
                         }
 
                         keyToList[key] = new StringSet(true, valuesList);
@@ -349,27 +337,23 @@ namespace ReleasePalette
                }
             }
 
-            var dataFile = configuration.MapFile.Folder + $"{configuration.Release}.configuration";
-            if (dataFile.Exists())
+            if (watcher.DataConfiguration(configuration).If(out var dataConfiguration, out var exception))
             {
-               var _data =
-                  from source in dataFile.TryTo.Text
-                  from configurationFromString in Configuration.FromString(source)
-                  select configurationFromString;
-               if (_data.ValueOrCast(out var dataConfiguration, out Result<Unit> asUnit))
+               foreach (var (key, value) in dataConfiguration.Values())
                {
-                  foreach (var (key, value) in dataConfiguration.Values())
+                  if (keyToIndexes.If(key, out index))
                   {
-                     if (keyToIndexes.If(key, out index))
-                     {
-                        listViewItems.Items[index].SubItems.Add(value);
-                     }
+                     listViewItems.Items[index].SubItems.Add(value);
+                  }
+                  else
+                  {
+                     listViewItems.Items[index].SubItems.Add(string.Empty);
                   }
                }
-               else
-               {
-                  return asUnit;
-               }
+            }
+            else
+            {
+               return exception;
             }
 
             listViewItems.Items[0].Selected = true;
@@ -386,7 +370,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e) => selectedIndexAction(none<string>());
+      protected void listViewItems_SelectedIndexChanged(object sender, EventArgs e) => selectedIndexAction(nil);
 
       protected void selectedIndexAction(Maybe<string> _value)
       {
@@ -402,23 +386,34 @@ namespace ReleasePalette
                {
                   listViewItem.SubItems[1].Text = value;
                }
+               else if (listViewItem.SubItems.Count > 1)
+               {
+                   value = listViewItem.SubItems[1].Text;
+               }
                else
                {
-                  value = listViewItem.SubItems[1].Text;
+                  value = string.Empty;
                }
 
                textValue.Text = value;
 
                if (itemTypes.If(key, out var itemType))
                {
-                  if (itemType == ItemType.Url && value.IsNotEmpty())
+                  if (itemType == ItemType.Url)
                   {
-                     showMessage($"Opening {value}");
-                     webBrowser.Navigate(value);
+                     if (value.IsNotEmpty())
+                     {
+                        showMessage($"Opening {value}");
+                        webBrowser.Navigate(value);
+                     }
+                     else
+                     {
+                        webBrowser.Navigate("about:blank");
+                     }
                   }
                   else
                   {
-                     webBrowser.Navigate("about:blank");
+                     showMessage($"{key}: {value}");
                   }
                }
             }
@@ -487,8 +482,11 @@ namespace ReleasePalette
 
       protected void ReleasePalette_FormClosing(object sender, FormClosingEventArgs e)
       {
-         saveData();
-         configuration.Save();
+         if (configurationLoaded)
+         {
+            saveData();
+            configuration.Save();
+         }
       }
 
       protected void open()
@@ -573,7 +571,7 @@ namespace ReleasePalette
       {
          if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master"};
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master" };
             missingWorkItems.Show();
          }
          else
@@ -586,7 +584,7 @@ namespace ReleasePalette
       {
          if (getMissingWorkItemsArgumentsMaster2d().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master2d"};
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master2d" };
             missingWorkItems.Show();
          }
          else
@@ -631,7 +629,7 @@ namespace ReleasePalette
          }
          else
          {
-            return $"Text item {key} not found".Fail();
+            return fail($"Text item {key} not found");
          }
       }
 
@@ -642,18 +640,22 @@ namespace ReleasePalette
             from key in labelToKeys.Map(lineItem.label)
             from itemType in itemTypes.Map(lineItem.label)
             from stringSet in keyToList.Map(key)
-            select (stringSet, itemType);
-         if (_result.If(out var set, out var type) && type == ItemType.List)
+            select (stringSet, itemType, lineItem.label);
+         if (_result.If(out var set, out var type, out var label))
          {
             var text = textValue.Text;
-            if (set.Contains(text))
+            if (type == ItemType.List)
             {
+               if (set.Contains(text))
+               {
+               }
+               else if (set.FirstStartsWith(text).If(out var fullValue))
+               {
+                  textValue.Text = fullValue;
+                  textValue.Select(text.Length, textValue.Text.Length - text.Length);
+               }
             }
-            else if (set.FirstStartsWith(text).If(out var fullValue))
-            {
-               textValue.Text = fullValue;
-               textValue.Select(text.Length, textValue.Text.Length - text.Length);
-            }
+            showMessage($"{label}: {text}");
          }
       }
 
@@ -670,7 +672,7 @@ namespace ReleasePalette
          return replacements;
       }
 
-      protected void openEmail(string fileName) => openEmailFrom(fileName, Enumerable.Empty<string>()).OnFailure(e => showException(e));
+      protected void openEmail(string fileName) => openEmailFrom(fileName, Enumerable.Empty<string>()).OnFailure(showException);
 
       protected Result<Unit> openEmailFrom(string fileName, IEnumerable<string> attachments)
       {
@@ -690,7 +692,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void openAppointment(string fileName) => openAppointmentFrom(fileName, Enumerable.Empty<string>()).OnFailure(e => showException(e));
+      protected void openAppointment(string fileName) => openAppointmentFrom(fileName, Enumerable.Empty<string>()).OnFailure(showException);
 
       protected Result<Unit> openAppointmentFrom(string fileName, IEnumerable<string> attachments)
       {
@@ -748,5 +750,7 @@ namespace ReleasePalette
       protected void closedEmail() => openEmail("Closed.txt");
 
       protected void toDevelopEmail() => openEmail("ToDevelop.txt");
+
+      protected void ReleasePalette_SizeChanged(object sender, EventArgs e) => listViewItems.AutoSizeColumns();
    }
 }

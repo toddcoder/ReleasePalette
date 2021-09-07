@@ -2,6 +2,7 @@
 using Core.Matching;
 using Core.Monads;
 using Core.Strings;
+using static Core.Monads.MonadFunctions;
 
 namespace ReleasePalette.Content
 {
@@ -20,13 +21,13 @@ namespace ReleasePalette.Content
                   style.FontName = value;
                   break;
                case "font-size":
-                  if (value.Single().ValueOrCast(out var fontSize, out Result<Style> asStyle))
+                  if (value.Single().If(out var fontSize, out var exception))
                   {
                      style.FontSize = fontSize;
                   }
                   else
                   {
-                     return asStyle;
+                     return exception;
                   }
 
                   break;
@@ -37,22 +38,22 @@ namespace ReleasePalette.Content
                   style.Italic = value.Same("true");
                   break;
                case "alignment":
-                  if (value.Enumeration<Alignment>().ValueOrCast(out var alignment, out asStyle))
+                  if (value.Enumeration<Alignment>().If(out var alignment, out exception))
                   {
                      style.Alignment = alignment;
                   }
                   else
                   {
-                     return asStyle;
+                     return exception;
                   }
 
                   break;
                default:
-                  return $"Didn't understand specifier '{specifier}'".Failure<Style>();
+                  return fail($"Didn't understand specifier '{specifier}'");
             }
          }
 
-         return style.Success();
+         return style;
       }
 
       public Style()

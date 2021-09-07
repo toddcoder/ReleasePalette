@@ -93,10 +93,7 @@ namespace ReleasePalette
          }
       }
 
-      protected void AbandonPullRequests_Load(object sender, EventArgs e)
-      {
-         loadPullRequests(true);
-      }
+      protected void AbandonPullRequests_Load(object sender, EventArgs e) => loadPullRequests(true);
 
       protected void treeViewPullRequests_AfterCheck(object sender, TreeViewEventArgs e)
       {
