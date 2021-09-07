@@ -110,6 +110,7 @@
     </Compile>
     <Compile Include="AppointmentGenerator.cs" />
     <Compile Include="CheckingStatus.cs" />
+    <Compile Include="ConfigurationFileWatcher.cs" />
     <Compile Include="Configurations.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Content\Alignment.cs" />

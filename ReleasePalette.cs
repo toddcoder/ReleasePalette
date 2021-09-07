@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Core.Applications;
 using Core.Assertions;
@@ -32,6 +31,7 @@ namespace ReleasePalette
       protected StringHash<StringSet> keyToList;
       protected StringHash<string[]> labelToTransformations;
       protected bool configurationLoaded;
+      protected ConfigurationFileWatcher watcher;
 
       public ReleasePalette()
       {
@@ -57,6 +57,11 @@ namespace ReleasePalette
             (configuration, mapConfiguration, personal) = configurations;
 
             showSuccess("Configurations loaded");
+
+            watcher = new ConfigurationFileWatcher(configuration);
+            watcher.FileChanged += (_, _) => loadItems()
+               .OnSuccess(_ => showMessage("Release file changed"))
+               .OnFailure(exception1 => showException(exception1));
 
             menus = new FreeMenus { Form = this };
 
@@ -173,10 +178,8 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
-               dataFile.Text = dataConfiguration.ToString();
-               dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8);
-               loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
+               watcher.ResetFile(configuration, dataConfiguration);
+               //loadItems().OnSuccess(_ => showSuccess("Data saved")).OnFailure(e => showException(e));
             }
             else
             {
@@ -206,11 +209,12 @@ namespace ReleasePalette
 
             if (dataHash.ToConfiguration().If(out var dataConfiguration, out var exception))
             {
-               var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
+               /*var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
                dataFile.Text = dataConfiguration.ToString();
                dataFile.TryTo.SetText(dataConfiguration.ToString(), Encoding.UTF8)
                   .OnSuccess(_ => showSuccess("Data saved"))
-                  .OnFailure(e => showException(e));
+                  .OnFailure(e => showException(e));*/
+               watcher.ResetFile(configuration, dataConfiguration);
             }
             else
             {
@@ -282,26 +286,26 @@ namespace ReleasePalette
          {
             configuration.Release = releaseDialog.ReleaseValue;
 
-            var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
+            /*var dataFile = configuration.ReleaseFolder + $"{configuration.Release}.configuration";
             if (!dataFile.Exists())
+            {*/
+            if (releaseDialog.IsNew)
             {
-               if (releaseDialog.IsNew)
-               {
-                  newData();
-               }
-               else
-               {
-                  saveData();
-               }
+               newData();
             }
+            else
+            {
+               saveData();
+            }
+            //}
 
-            configuration.Save()
+            /*configuration.Save()
                .OnSuccess(_ =>
                {
                   loadItems();
                   showTitle();
                })
-               .OnFailure(exception => showException(exception));
+               .OnFailure(exception => showException(exception));*/
          }
       }
 
@@ -581,7 +585,7 @@ namespace ReleasePalette
       {
          if (getMissingWorkItemsArguments().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master"};
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master" };
             missingWorkItems.Show();
          }
          else
@@ -594,7 +598,7 @@ namespace ReleasePalette
       {
          if (getMissingWorkItemsArgumentsMaster2d().If(out var pullRequestId, out var releaseBranch, out var exception))
          {
-            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master2d"};
+            var missingWorkItems = new MissingWorkItems { PullRequestId = pullRequestId, ReleaseBranch = releaseBranch, Type = "master2d" };
             missingWorkItems.Show();
          }
          else
